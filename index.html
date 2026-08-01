@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Manager Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2pdf for generating PDF invoices -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans pb-20">
+
+    <div class="max-w-md mx-auto bg-gray-50 min-h-screen shadow-lg relative">
+        
+        <!-- Header -->
+        <div class="bg-blue-600 text-white p-5 rounded-b-2xl shadow-md mb-6 sticky top-0 z-10 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold" id="appTitle">My Properties</h1>
+                <p class="text-blue-100 text-sm mt-1" id="appSubtitle">August 2026</p>
+            </div>
+            <button id="backBtn" onclick="goBack()" class="hidden bg-blue-700 hover:bg-blue-800 px-3 py-2 rounded-lg text-sm font-bold transition">
+                <i class="fa-solid fa-arrow-left mr-1"></i> Back
+            </button>
+        </div>
+
+        <div class="px-4" id="mainContainer">
+            
+            <!-- STEP 1: PROPERTY LIST VIEW -->
+            <div id="view-properties" class="space-y-4">
+                <h2 class="text-lg font-bold text-gray-700 mb-3 px-1">Select a Property</h2>
+                <div id="propertyList"></div>
+            </div>
+
+            <!-- STEP 2: DATA ENTRY VIEW -->
+            <div id="view-entry" class="hidden">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
+                    <h2 class="text-lg font-bold text-gray-700 mb-3">Settings & Common Area</h2>
+                    
+                    <div class="flex justify-between items-center mb-4">
+                        <label class="text-sm font-semibold text-gray-600">Unit Rate (₹)</label>
+                        <input type="number" id="unitRate" class="w-20 p-2 border border-gray-300 rounded text-center font-bold bg-gray-50" disabled>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Common Prev</label>
+                            <input type="number" id="commonPrev" disabled class="w-full p-2 border border-gray-200 bg-gray-50 rounded text-gray-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-700 mb-1 font-bold">Common New</label>
+                            <input type="number" id="commonCurr" placeholder="0" class="w-full p-2 border border-blue-300 rounded bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-700 mb-1 font-bold">Total Common Expenses (₹)</label>
+                        <input type="number" id="commonExpense" placeholder="e.g. Guard salary" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div id="unitsContainer"></div>
+
+                <button onclick="calculateBills()" class="w-full bg-blue-600 text-white font-bold text-lg py-4 rounded-xl shadow-lg hover:bg-blue-700 active:transform active:scale-95 transition-all mt-4 mb-8">
+                    Calculate Bills
+                </button>
+            </div>
+
+            <!-- STEP 3: INVOICE VIEW -->
+            <div id="view-invoices" class="hidden">
+                <h2 class="text-lg font-bold text-gray-700 mb-3 px-1">Generated Invoices</h2>
+                <div id="invoicesList"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const database = {
+            properties: [
+                {
+                    id: 'p1',
+                    name: '481',
+                    address: 'Housing Board',
+                    unitRate: 7,
+                    commonPrevReading: 4500,
+                    units: [
+                        { id: 'u1', name: 'GF', tenant: 'Sangeeta Kataria', phone: '8759757615', rent: 8000, dues: 450, prevReading: 1200 },
+                        { id: 'u2', name: 'Flat 102', tenant: 'Priya Patel', phone: '9123456789', rent: 15000, dues: 500, prevReading: 3150 }
+                    ]
+                },
+                {
+                    id: 'p2',
+                    name: 'Cyber Hub PG',
+                    address: 'DLF Phase 3',
+                    unitRate: 9,
+                    commonPrevReading: 1020,
+                    units: [
+                        { id: 'u3', name: 'Room 1', tenant: 'Amit Kumar', phone: '9988776655', rent: 8000, dues: 0, prevReading: 400 },
+                        { id: 'u4', name: 'Room 2', tenant: 'Neha Singh', phone: '9876501234', rent: 8500, dues: 0, prevReading: 650 }
+                    ]
+                }
+            ]
+        };
+
+        let currentProperty = null;
+        let generatedInvoicesData = [];
+
+        function showView(viewId) {
+            document.getElementById('view-properties').classList.add('hidden');
+            document.getElementById('view-entry').classList.add('hidden');
+            document.getElementById('view-invoices').classList.add('hidden');
+            document.getElementById(viewId).classList.remove('hidden');
+
+            const backBtn = document.getElementById('backBtn');
+            if (viewId === 'view-properties') {
+                backBtn.classList.add('hidden');
+                document.getElementById('appTitle').innerText = 'My Properties';
+            } else {
+                backBtn.classList.remove('hidden');
+            }
+        }
+
+        function goBack() {
+            if (!document.getElementById('view-invoices').classList.contains('hidden')) {
+                showView('view-entry');
+            } else if (!document.getElementById('view-entry').classList.contains('hidden')) {
+                showView('view-properties');
+                currentProperty = null;
+            }
+        }
+
+        function loadProperties() {
+            const container = document.getElementById('propertyList');
+            container.innerHTML = '';
+
+            database.properties.forEach(prop => {
+                const card = `
+                    <div onclick="selectProperty('${prop.id}')" class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 cursor-pointer hover:border-blue-500 hover:shadow-md transition-all flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-lg text-gray-800">${prop.name}</h3>
+                            <p class="text-sm text-gray-500">${prop.address} • ${prop.units.length} Units</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-400"></i>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        function selectProperty(propId) {
+            currentProperty = database.properties.find(p => p.id === propId);
+            document.getElementById('appTitle').innerText = currentProperty.name;
+            
+            document.getElementById('unitRate').value = currentProperty.unitRate;
+            document.getElementById('commonPrev').value = currentProperty.commonPrevReading;
+            document.getElementById('commonCurr').value = ''; 
+            document.getElementById('commonExpense').value = '';
+
+            const unitsContainer = document.getElementById('unitsContainer');
+            unitsContainer.innerHTML = '';
+
+            currentProperty.units.forEach(unit => {
+                const unitHtml = `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4">
+                        <div class="flex justify-between items-center border-b pb-2 mb-3">
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-lg">${unit.name}</h3>
+                                <p class="text-xs text-gray-500">${unit.tenant}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="block text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded border">Rent: ₹${unit.rent}</span>
+                                ${unit.dues > 0 ? `<span class="block text-xs text-red-500 mt-1">Dues: ₹${unit.dues}</span>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mb-3">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Prev Reading</label>
+                                <input type="number" value="${unit.prevReading}" disabled class="w-full p-2 border border-gray-200 bg-gray-50 rounded text-gray-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-700 mb-1 font-bold">New Reading</label>
+                                <input type="number" id="curr_${unit.id}" placeholder="0" class="w-full p-2 border border-blue-300 rounded bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-700 mb-1">Extra Charges (₹) for ${unit.name}</label>
+                            <input type="number" id="extra_${unit.id}" placeholder="e.g. Repair" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                `;
+                unitsContainer.innerHTML += unitHtml;
+            });
+
+            showView('view-entry');
+        }
+
+        function getVal(id) {
+            return parseFloat(document.getElementById(id).value) || 0;
+        }
+
+        function calculateBills() {
+            if (!currentProperty) return;
+
+            const unitRate = currentProperty.unitRate;
+            const commonPrev = currentProperty.commonPrevReading;
+            const commonCurr = getVal('commonCurr');
+            const commonExpense = getVal('commonExpense');
+            const totalUnits = currentProperty.units.length;
+            
+            let commonElecCost = 0;
+            if (commonCurr > commonPrev) {
+                commonElecCost = (commonCurr - commonPrev) * unitRate;
+            }
+
+            const commonElecPerUnit = commonElecCost / totalUnits;
+            const commonExpPerUnit = commonExpense / totalUnits;
+
+            const resultsContainer = document.getElementById('invoicesList');
+            resultsContainer.innerHTML = '';
+            generatedInvoicesData = []; 
+
+            currentProperty.units.forEach(unit => {
+                const currReading = getVal(`curr_${unit.id}`);
+                const extraCharge = getVal(`extra_${unit.id}`);
+
+                let unitElecCost = 0;
+                let unitUnitsConsumed = 0;
+                if (currReading > unit.prevReading) {
+                    unitUnitsConsumed = currReading - unit.prevReading;
+                    unitElecCost = unitUnitsConsumed * unitRate;
+                }
+
+                const totalBill = unit.rent + unitElecCost + commonElecPerUnit + commonExpPerUnit + extraCharge + unit.dues;
+
+                const invoiceData = {
+                    ...unit,
+                    unitUnitsConsumed,
+                    unitElecCost,
+                    commonElecPerUnit,
+                    commonExpPerUnit,
+                    extraCharge,
+                    totalBill: Math.round(totalBill)
+                };
+                generatedInvoicesData.push(invoiceData);
+
+                // Added an ID to the card so html2pdf can capture it
+                const invoiceHTML = `
+                    <div class="mb-6 relative">
+                        <div id="invoice-card-${unit.id}" class="bg-white border border-gray-200 p-6 rounded-xl shadow-sm relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
+                            
+                            <div class="flex justify-between items-start mt-2 mb-4">
+                                <div>
+                                    <h3 class="text-2xl font-bold text-gray-800">${unit.name}</h3>
+                                    <p class="text-sm text-gray-500 font-medium">${currentProperty.name}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Invoice Date</p>
+                                    <p class="text-sm font-semibold text-gray-700">Aug 2026</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-50 p-3 rounded-lg mb-5">
+                                <p class="text-xs text-gray-500 mb-1">Billed To:</p>
+                                <p class="font-bold text-gray-800">${unit.tenant}</p>
+                            </div>
+                            
+                            <div class="text-sm text-gray-600 space-y-3 mb-5 border-b border-dashed border-gray-300 pb-5">
+                                <div class="flex justify-between"><span>Base Rent:</span> <span class="font-semibold text-gray-800">₹${unit.rent.toFixed(2)}</span></div>
+                                <div class="flex justify-between">
+                                    <span>Room Electricity <span class="text-xs text-gray-400">(${unitUnitsConsumed} units @ ₹${unitRate})</span>:</span> 
+                                    <span class="font-semibold text-gray-800">₹${unitElecCost.toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between"><span>Common Electricity:</span> <span class="font-semibold text-gray-800">₹${commonElecPerUnit.toFixed(2)}</span></div>
+                                <div class="flex justify-between"><span>Common Maintenance:</span> <span class="font-semibold text-gray-800">₹${commonExpPerUnit.toFixed(2)}</span></div>
+                                
+                                ${extraCharge > 0 ? `<div class="flex justify-between text-red-500 font-medium"><span>Extra Charges:</span> <span>₹${extraCharge.toFixed(2)}</span></div>` : ''}
+                                ${unit.dues > 0 ? `<div class="flex justify-between text-red-500 font-medium"><span>Previous Dues:</span> <span>₹${unit.dues.toFixed(2)}</span></div>` : ''}
+                            </div>
+                            
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-gray-600 font-bold uppercase tracking-wide text-sm">Total Due</span>
+                                <span class="text-3xl font-black text-blue-700">₹${invoiceData.totalBill}</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <button id="btn-${unit.id}" onclick="shareInvoicePDF('${unit.id}')" class="w-full bg-[#25D366] text-white font-bold py-3 rounded-xl shadow-md hover:bg-[#1ebd5a] active:scale-95 transition-all flex items-center justify-center gap-2 mt-2">
+                            <i class="fa-brands fa-whatsapp text-xl"></i> Share PDF & Message
+                        </button>
+                    </div>
+                `;
+                resultsContainer.innerHTML += invoiceHTML;
+            });
+
+            showView('view-invoices');
+        }
+
+        async function shareInvoicePDF(unitId) {
+            const data = generatedInvoicesData.find(u => u.id === unitId);
+            if (!data) return;
+
+            const btn = document.getElementById(`btn-${unitId}`);
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Generating PDF...`;
+            btn.disabled = true;
+
+            const invoiceElement = document.getElementById(`invoice-card-${unitId}`);
+            
+            const text = 
+`Hello ${data.tenant},
+Here is your rent & utility breakdown for August 2026. 
+
+Total Due: ₹${data.totalBill}
+
+Please process the payment via UPI to 9729999000 at your earliest convenience. See the attached PDF for the full breakdown. Thank you!`;
+
+            try {
+                // Configure PDF generation
+                const opt = {
+                    margin: 0.2,
+                    filename: `${data.name}_Aug2026_Invoice.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'in', format: 'a5', orientation: 'portrait' } // A5 format looks better for mobile receipts
+                };
+
+                // Generate PDF as a blob
+                const pdfBlob = await html2pdf().set(opt).from(invoiceElement).outputPdf('blob');
+                const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
+
+                // Check if device supports sharing files
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: 'Rent Invoice',
+                        text: text,
+                        files: [file]
+                    });
+                } else {
+                    // Fallback for Desktops: Download PDF and open WhatsApp Web
+                    html2pdf().set(opt).from(invoiceElement).save();
+                    const whatsappUrl = `https://wa.me/91${data.phone}?text=${encodeURIComponent(text)}`;
+                    window.open(whatsappUrl, '_blank');
+                    alert("Since direct file sharing isn't supported on this browser, the PDF has been downloaded to your device. You can attach it manually in the WhatsApp window that just opened.");
+                }
+            } catch (error) {
+                console.error("Error sharing PDF:", error);
+                alert("An error occurred while generating the invoice.");
+            } finally {
+                // Restore button state
+                btn.innerHTML = `<i class="fa-brands fa-whatsapp text-xl"></i> Share PDF & Message`;
+                btn.disabled = false;
+            }
+        }
+
+        window.onload = loadProperties;
+
+    </script>
+</body>
+</html>
