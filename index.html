@@ -46,6 +46,8 @@
                     <div class="flex items-center gap-3 text-xs text-gray-500 mt-1">
                         <span><i class="fa-solid fa-bolt text-amber-500 mr-1"></i>₹<span id="propDetailsRate">0</span>/unit</span>
                         <span>•</span>
+                        <span><i class="fa-solid fa-gauge-high text-indigo-500 mr-1"></i>Common Base: <span id="propDetailsCommonMeter">0</span></span>
+                        <span>•</span>
                         <span><i class="fa-solid fa-door-open text-blue-500 mr-1"></i><span id="propDetailsRooms">0</span> Units</span>
                     </div>
                 </div>
@@ -114,12 +116,10 @@
     </div>
 
     <div class="fixed left-[-9999px] top-0">
-        <div id="pdfPrintableTemplate" class="bg-white p-8 text-gray-900 w-[780px]">
-            </div>
+        <div id="pdfPrintableTemplate" class="bg-white p-8 text-gray-900 w-[780px]"></div>
     </div>
 
     <script>
-        // Data Schema & Initialization
         const DB_KEY = 'universal_rent_manager_store';
         
         let db = JSON.parse(localStorage.getItem(DB_KEY)) || {
@@ -128,11 +128,11 @@
                     id: 'prop_demo',
                     name: 'Sunshine Residency',
                     unitRate: 8.5,
+                    commonBaseReading: 1200,
                     rooms: [
                         { id: 'room_101', name: '101', tenant: 'Rahul Sharma', rent: 8000, defaultDues: 0, lastReading: 450 },
                         { id: 'room_102', name: '102', tenant: 'Priya Verma', rent: 9000, defaultDues: 0, lastReading: 780 }
                     ],
-                    // records keyed by Month-Key: "YYYY-MM"
                     history: {}
                 }
             ]
@@ -142,12 +142,10 @@
             localStorage.setItem(DB_KEY, JSON.stringify(db));
         }
 
-        // Navigation State
         let currentView = 'home';
         let selectedPropId = null;
         let selectedMonthKey = null;
 
-        // Date Utilities
         function getMonthKey(date) {
             const y = date.getFullYear();
             const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -159,7 +157,6 @@
             return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
         }
 
-        // Generate past 6 months list starting with current month
         function generateRecentMonthsList() {
             const list = [];
             const d = new Date();
@@ -170,11 +167,11 @@
             return list;
         }
 
-        // Navigation Controller
         function navigateTo(view, payload = {}) {
             currentView = view;
-            const views = ['view-home', 'view-property-months', 'view-month-billing', 'view-admin'];
-            views.forEach(v => document.getElementById(v).classList.add('hidden'));
+            ['view-home', 'view-property-months', 'view-month-billing', 'view-admin'].forEach(v => {
+                document.getElementById(v).classList.add('hidden');
+            });
 
             const backBtn = document.getElementById('backBtn');
             const adminBtn = document.getElementById('adminBtn');
@@ -188,8 +185,7 @@
                 selectedPropId = null;
                 selectedMonthKey = null;
                 renderHomeProperties();
-            } 
-            else if (view === 'property-months') {
+            } else if (view === 'property-months') {
                 document.getElementById('view-property-months').classList.remove('hidden');
                 backBtn.classList.remove('hidden');
                 adminBtn.classList.add('hidden');
@@ -197,16 +193,14 @@
                 const prop = db.properties.find(p => p.id === selectedPropId);
                 headerSubText.innerText = prop ? prop.name : 'Property Months';
                 renderPropertyMonths();
-            } 
-            else if (view === 'month-billing') {
+            } else if (view === 'month-billing') {
                 document.getElementById('view-month-billing').classList.remove('hidden');
                 backBtn.classList.remove('hidden');
                 adminBtn.classList.add('hidden');
                 selectedMonthKey = payload.monthKey;
                 headerSubText.innerText = formatMonthKey(selectedMonthKey);
                 renderMonthBillingView();
-            } 
-            else if (view === 'admin') {
+            } else if (view === 'admin') {
                 document.getElementById('view-admin').classList.remove('hidden');
                 backBtn.classList.remove('hidden');
                 adminBtn.classList.add('hidden');
@@ -225,7 +219,6 @@
             }
         }
 
-        // 1. HOME SCREEN: PROPERTIES LIST
         function renderHomeProperties() {
             const container = document.getElementById('homePropertiesContainer');
             document.getElementById('propCountBadge').innerText = `${db.properties.length} Locations`;
@@ -249,6 +242,8 @@
                             <span><i class="fa-solid fa-door-closed mr-1"></i>${p.rooms.length} Units</span>
                             <span class="mx-2">•</span>
                             <span>₹${p.unitRate}/unit</span>
+                            <span class="mx-2">•</span>
+                            <span>Common: ${p.commonBaseReading || 0}</span>
                         </p>
                     </div>
                     <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition">
@@ -258,7 +253,6 @@
             `).join('');
         }
 
-        // 2. PROPERTY MONTHS LIST
         function renderPropertyMonths() {
             const prop = db.properties.find(p => p.id === selectedPropId);
             if (!prop) return;
@@ -266,6 +260,7 @@
             document.getElementById('propDetailsName').innerText = prop.name;
             document.getElementById('propDetailsRate').innerText = prop.unitRate;
             document.getElementById('propDetailsRooms').innerText = prop.rooms.length;
+            document.getElementById('propDetailsCommonMeter').innerText = prop.commonBaseReading || 0;
 
             const months = generateRecentMonthsList();
             const container = document.getElementById('monthsListContainer');
@@ -317,7 +312,6 @@
             }).join('');
         }
 
-        // 3. MONTH BILLING VIEW
         function renderMonthBillingView() {
             const prop = db.properties.find(p => p.id === selectedPropId);
             if (!prop) return;
@@ -342,7 +336,8 @@
                 statusBadge.innerText = "Draft / Not Created";
                 exportPdfBtn.classList.add('hidden');
 
-                document.getElementById('inputCommonPrev').value = '';
+                // Default common previous reading directly from Location Admin setting
+                document.getElementById('inputCommonPrev').value = prop.commonBaseReading || 0;
                 document.getElementById('inputCommonCurr').value = '';
                 document.getElementById('inputCommonExpense').value = '';
             }
@@ -400,7 +395,6 @@
             }).join('');
         }
 
-        // SAVE MONTH CALCULATIONS
         function saveMonthlyCalculations() {
             const prop = db.properties.find(p => p.id === selectedPropId);
             if (!prop || prop.rooms.length === 0) return;
@@ -469,7 +463,6 @@
             alert(`Rent record for ${formatMonthKey(selectedMonthKey)} saved successfully!`);
         }
 
-        // PDF GENERATION: FULL MONTH REPORT
         async function exportMonthlyStatementPDF() {
             const prop = db.properties.find(p => p.id === selectedPropId);
             const record = prop?.history?.[selectedMonthKey];
@@ -594,7 +587,13 @@
                     <div class="flex justify-between items-start mb-3 border-b pb-2">
                         <div>
                             <span class="font-bold text-base text-gray-800">${p.name}</span>
-                            <div class="text-xs text-gray-500 mt-0.5">Rate: ₹${p.unitRate}/kWh | ${p.rooms.length} Units</div>
+                            <div class="text-xs text-gray-500 mt-0.5 space-x-2">
+                                <span><i class="fa-solid fa-bolt text-amber-500"></i> ₹${p.unitRate}/unit</span>
+                                <span>•</span>
+                                <span><i class="fa-solid fa-gauge text-indigo-500"></i> Common Meter: <strong>${p.commonBaseReading || 0}</strong></span>
+                                <span>•</span>
+                                <span>${p.rooms.length} Units</span>
+                            </div>
                         </div>
                         <div class="flex items-center gap-1">
                             <button onclick="editPropertyPrompt('${p.id}')" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded transition" title="Edit Property">
@@ -637,11 +636,13 @@
             const name = prompt("Location / Property Name (e.g., Riverside Complex):");
             if (!name) return;
             const rate = parseFloat(prompt("Electricity Unit Rate (₹):", "8")) || 0;
+            const commonMeter = parseFloat(prompt("Baseline Common Meter Reading:", "0")) || 0;
 
             db.properties.push({
                 id: 'prop_' + Date.now(),
                 name: name.trim(),
                 unitRate: rate,
+                commonBaseReading: commonMeter,
                 rooms: [],
                 history: {}
             });
@@ -656,9 +657,11 @@
             const name = prompt("Update Property Name:", prop.name);
             if (!name) return;
             const rate = parseFloat(prompt("Update Electricity Rate (₹):", prop.unitRate));
+            const commonMeter = parseFloat(prompt("Update Baseline Common Meter Reading:", prop.commonBaseReading || 0));
 
             prop.name = name.trim();
             if (!isNaN(rate)) prop.unitRate = rate;
+            if (!isNaN(commonMeter)) prop.commonBaseReading = commonMeter;
 
             saveDB();
             renderAdminProperties();
@@ -727,7 +730,6 @@
             renderAdminProperties();
         }
 
-        // Run On Load
         window.onload = () => {
             navigateTo('home');
         };
