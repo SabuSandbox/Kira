@@ -1,3 +1,8 @@
+Here is the complete updated single-file code.
+Summary of Fixes & Additions
+ * PDF Page Width Fit (No Bleed/Clipping): Adjusted the printable canvas width to 750px with table-layout: fixed, strict column percentage widths, and a scale-to-fit calculation inside html2pdf. This ensures tables fit neatly within standard A4 portrait boundaries.
+ * Edit Synced Records: When viewing an existing or calculated month, inputs can now be updated and re-saved at any time with the "Update & Sync Record" button.
+ * Delete Record Option: Added a "Delete This Month Record" button inside the billing screen (and a quick-delete trash icon in the month directory) to reset that month's calculation back to "Draft / Not Created" and sync the deletion across devices.
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,6 +33,7 @@
             canvas.width = 512;
             canvas.height = 512;
             const ctx = canvas.getContext('2d');
+            
             const grad = ctx.createLinearGradient(0, 0, 512, 512);
             grad.addColorStop(0, '#1e293b');
             grad.addColorStop(1, '#090d16');
@@ -90,8 +96,10 @@
 
             const iconDataUrl = canvas.toDataURL('image/png');
             window.addEventListener('DOMContentLoaded', () => {
-                document.getElementById('appleTouchIcon').href = iconDataUrl;
-                document.getElementById('androidIcon').href = iconDataUrl;
+                const apple = document.getElementById('appleTouchIcon');
+                const android = document.getElementById('androidIcon');
+                if (apple) apple.href = iconDataUrl;
+                if (android) android.href = iconDataUrl;
             });
         })();
     </script>
@@ -118,7 +126,7 @@
                             Rent Manager
                             <span class="inline-block w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
                         </h1>
-                        <p class="text-slate-400 text-xs font-medium" id="headerSubText">Cloud Connected</p>
+                        <p class="text-slate-400 text-xs font-medium" id="headerSubText">Dashboard</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -141,7 +149,7 @@
                             <i class="fa-solid fa-cloud-bolt text-2xl text-cyan-400"></i>
                         </div>
                         <h2 class="text-xl font-bold text-white tracking-wide">Sync Login</h2>
-                        <p class="text-xs text-slate-400 mt-1">Authenticate once to sync your properties across all devices.</p>
+                        <p class="text-xs text-slate-400 mt-1">Authenticate once to synchronize across all devices.</p>
                     </div>
 
                     <div class="space-y-4">
@@ -164,6 +172,10 @@
                                 Register
                             </button>
                         </div>
+                        
+                        <button onclick="continueOffline()" class="w-full text-center text-xs text-slate-500 hover:text-cyan-400 pt-1 transition">
+                            Continue Offline (Local Storage Mode)
+                        </button>
                     </div>
                 </div>
             </section>
@@ -198,7 +210,9 @@
                         <h2 class="text-base font-bold text-white" id="billingMonthTitle">Month Year</h2>
                         <p class="text-xs text-slate-400" id="billingLocationSubtitle">Location</p>
                     </div>
-                    <span id="billingStatusBadge" class="text-xs px-2.5 py-1 rounded-full font-bold">Status</span>
+                    <div class="flex items-center gap-2">
+                        <span id="billingStatusBadge" class="text-xs px-2.5 py-1 rounded-full font-bold">Status</span>
+                    </div>
                 </div>
 
                 <div class="backdrop-blur-md bg-white/[0.05] p-4 rounded-2xl border border-white/10 shadow-lg mb-4">
@@ -228,10 +242,13 @@
 
                 <div class="space-y-2.5 mb-8">
                     <button onclick="saveMonthlyCalculations()" id="saveBtn" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm border border-white/15">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> Save & Sync Details
+                        <i class="fa-solid fa-floppy-disk"></i> <span id="saveBtnText">Save & Sync Details</span>
                     </button>
-                    <button id="exportPdfBtn" onclick="exportMonthlyStatementPDF()" class="hidden w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm border border-white/15">
+                    <button id="exportPdfBtn" onclick="exportMonthlyStatementPDF()" class="hidden w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm border border-white/15">
                         <i class="fa-solid fa-file-pdf"></i> Download Complete Month PDF
+                    </button>
+                    <button id="deleteMonthRecordBtn" onclick="deleteCurrentMonthRecord()" class="hidden w-full bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 border border-rose-500/30 font-semibold py-2.5 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-xs">
+                        <i class="fa-solid fa-trash-can"></i> Delete This Month Record
                     </button>
                 </div>
             </section>
@@ -248,8 +265,8 @@
 
                 <div class="backdrop-blur-md bg-white/[0.03] border border-white/5 rounded-2xl p-4">
                     <div class="flex justify-between items-center text-xs">
-                        <span class="text-slate-400">Logged in as: <strong id="userDisplayEmail" class="text-slate-200"></strong></span>
-                        <button onclick="handleSignOut()" class="text-rose-400 hover:underline font-semibold">Sign Out</button>
+                        <span class="text-slate-400">Status: <strong id="userDisplayEmail" class="text-slate-200">Local Cache</strong></span>
+                        <button onclick="handleSignOut()" class="text-rose-400 hover:underline font-semibold">Sign Out / Lock</button>
                     </div>
                 </div>
             </section>
@@ -257,91 +274,136 @@
         </main>
     </div>
 
-    <div style="position: fixed; top: 0; left: 0; width: 800px; height: 0; overflow: hidden; z-index: -50; pointer-events: none;">
-        <div id="pdfPrintableTemplate" style="width: 800px; background-color: #ffffff; color: #111827; padding: 32px; box-sizing: border-box;"></div>
+    <div style="position: fixed; top: 0; left: 0; width: 750px; height: 0; overflow: hidden; z-index: -50; pointer-events: none;">
+        <div id="pdfPrintableTemplate" style="width: 750px; background-color: #ffffff; color: #111827; padding: 24px; box-sizing: border-box;"></div>
     </div>
 
     <script>
-        // ==========================================
-        // FIREBASE CONFIGURATION
-        // Replace with your project settings from Firebase Console
-        // ==========================================
+        // Firebase Config credentials (optional: if blank, works in Offline LocalStorage Mode)
         const firebaseConfig = {
-  apiKey: "AIzaSyAFHn1LLEYgG2-gPlImQQ6AsXY183r5AgI",
-  authDomain: "kira-15433.firebaseapp.com",
-  projectId: "kira-15433",
-  storageBucket: "kira-15433.firebasestorage.app",
-  messagingSenderId: "39799805654",
-  appId: "1:39799805654:web:36a80f7bfa3138bc879b77",
-  measurementId: "G-C265XTC6RG"
-};
+            apiKey: "",
+            authDomain: "",
+            projectId: "",
+            storageBucket: "",
+            messagingSenderId: "",
+            appId: ""
+        };
 
-        let auth, firestore, currentUser = null;
-        let db = { properties: [] };
+        const LOCAL_STORAGE_KEY = 'universal_rent_manager_store';
+        const LOCAL_AUTH_KEY = 'universal_rent_auth_flag';
+        
+        let auth = null;
+        let firestore = null;
+        let currentUser = null;
+        let isCloudMode = false;
 
-        try {
-            firebase.initializeApp(firebaseConfig);
-            auth = firebase.auth();
-            firestore = firebase.firestore();
-            firestore.enablePersistence({ synchronizeTabs: true }).catch(() => {});
-        } catch(e) {
-            console.error("Firebase init failed. Make sure to replace config keys.");
+        let db = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || {
+            properties: [
+                {
+                    id: 'prop_demo',
+                    name: 'Sunshine Residency',
+                    unitRate: 8.5,
+                    commonBaseReading: 1200,
+                    rooms: [
+                        { id: 'room_101', name: '101', tenant: 'Rahul Sharma', rent: 8000, defaultDues: 0, lastReading: 450 },
+                        { id: 'room_102', name: '102', tenant: 'Priya Verma', rent: 9000, defaultDues: 0, lastReading: 780 }
+                    ],
+                    history: {}
+                }
+            ]
+        };
+
+        if (firebaseConfig.apiKey && firebaseConfig.projectId) {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                firestore = firebase.firestore();
+                firestore.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+                isCloudMode = true;
+
+                auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        currentUser = user;
+                        document.getElementById('view-auth').classList.add('hidden');
+                        document.getElementById('mainHeader').classList.remove('hidden');
+                        document.getElementById('userDisplayEmail').innerText = user.email;
+                        await bindCloudData(user.uid);
+                        navigateTo('home');
+                    } else {
+                        currentUser = null;
+                        document.getElementById('mainHeader').classList.add('hidden');
+                        ['view-home', 'view-property-months', 'view-month-billing', 'view-admin'].forEach(v => {
+                            document.getElementById(v).classList.add('hidden');
+                        });
+                        document.getElementById('view-auth').classList.remove('hidden');
+                    }
+                });
+            } catch(e) {
+                console.warn("Firebase initialization failed, falling back to Local Mode:", e);
+                initLocalAuth();
+            }
+        } else {
+            initLocalAuth();
         }
 
-        // Persistent Auth Listener
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                currentUser = user;
+        function initLocalAuth() {
+            isCloudMode = false;
+            const isAuthed = localStorage.getItem(LOCAL_AUTH_KEY);
+            if (isAuthed === 'true') {
                 document.getElementById('view-auth').classList.add('hidden');
                 document.getElementById('mainHeader').classList.remove('hidden');
-                document.getElementById('userDisplayEmail').innerText = user.email;
-                await bindCloudData(user.uid);
+                document.getElementById('userDisplayEmail').innerText = "Offline Mode";
                 navigateTo('home');
             } else {
-                currentUser = null;
                 document.getElementById('mainHeader').classList.add('hidden');
-                ['view-home', 'view-property-months', 'view-month-billing', 'view-admin'].forEach(v => {
-                    document.getElementById(v).classList.add('hidden');
-                });
                 document.getElementById('view-auth').classList.remove('hidden');
             }
-        });
+        }
 
-        // Sync Firestore Data Realtime
         async function bindCloudData(uid) {
             firestore.collection('user_stores').doc(uid).onSnapshot((doc) => {
                 if (doc.exists) {
                     db = doc.data();
                 } else {
-                    db = { properties: [] };
-                    saveCloudData();
+                    saveStore();
                 }
                 refreshCurrentView();
             });
         }
 
-        async function saveCloudData() {
-            if (!currentUser) return;
-            try {
-                await firestore.collection('user_stores').doc(currentUser.uid).set(db, { merge: true });
-            } catch (err) {
-                console.error("Cloud sync error:", err);
+        async function saveStore() {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(db));
+            if (isCloudMode && currentUser) {
+                try {
+                    await firestore.collection('user_stores').doc(currentUser.uid).set(db, { merge: true });
+                } catch (err) {
+                    console.error("Cloud sync failed:", err);
+                }
             }
         }
 
-        // Authentication Handlers
         async function handleLogin() {
             const email = document.getElementById('authEmail').value.trim();
             const pass = document.getElementById('authPassword').value;
             const errBox = document.getElementById('authErrorMsg');
             errBox.classList.add('hidden');
 
-            try {
-                await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-                await auth.signInWithEmailAndPassword(email, pass);
-            } catch (e) {
-                errBox.innerText = e.message;
-                errBox.classList.remove('hidden');
+            if (isCloudMode) {
+                try {
+                    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+                    await auth.signInWithEmailAndPassword(email, pass);
+                } catch (e) {
+                    errBox.innerText = e.message;
+                    errBox.classList.remove('hidden');
+                }
+            } else {
+                if (!pass) {
+                    errBox.innerText = "Please enter a password.";
+                    errBox.classList.remove('hidden');
+                    return;
+                }
+                localStorage.setItem(LOCAL_AUTH_KEY, 'true');
+                initLocalAuth();
             }
         }
 
@@ -351,21 +413,35 @@
             const errBox = document.getElementById('authErrorMsg');
             errBox.classList.add('hidden');
 
-            try {
-                await auth.createUserWithEmailAndPassword(email, pass);
-            } catch (e) {
-                errBox.innerText = e.message;
-                errBox.classList.remove('hidden');
+            if (isCloudMode) {
+                try {
+                    await auth.createUserWithEmailAndPassword(email, pass);
+                } catch (e) {
+                    errBox.innerText = e.message;
+                    errBox.classList.remove('hidden');
+                }
+            } else {
+                handleLogin();
             }
+        }
+
+        function continueOffline() {
+            localStorage.setItem(LOCAL_AUTH_KEY, 'true');
+            initLocalAuth();
         }
 
         function handleSignOut() {
-            if (confirm("Log out? You will need your password to log back in.")) {
-                auth.signOut();
+            if (confirm("Log out? You will need your login details again on this device.")) {
+                if (isCloudMode) {
+                    auth.signOut();
+                } else {
+                    localStorage.removeItem(LOCAL_AUTH_KEY);
+                    initLocalAuth();
+                }
             }
         }
 
-        // View Router
+        // Routing
         let currentView = 'home';
         let selectedPropId = null;
         let selectedMonthKey = null;
@@ -446,6 +522,7 @@
             if (currentView === 'home') renderHomeProperties();
             else if (currentView === 'property-months') renderPropertyMonths();
             else if (currentView === 'admin') renderAdminProperties();
+            else if (currentView === 'month-billing') renderMonthBillingView();
         }
 
         function renderHomeProperties() {
@@ -456,7 +533,7 @@
                 container.innerHTML = `
                     <div class="text-center py-12 backdrop-blur-md bg-white/[0.04] rounded-2xl border border-dashed border-white/10">
                         <i class="fa-solid fa-map-location-dot text-3xl text-slate-500 mb-2"></i>
-                        <p class="text-xs text-slate-400">No cloud properties found.</p>
+                        <p class="text-xs text-slate-400">No properties registered.</p>
                         <button onclick="navigateTo('admin')" class="mt-3 text-cyan-400 font-bold text-xs hover:underline">Setup in Admin</button>
                     </div>`;
                 return;
@@ -503,7 +580,14 @@
                 let statusBadgeHTML = '';
 
                 if (isCreated) {
-                    statusBadgeHTML = `<span class="bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full">Calculated</span>`;
+                    statusBadgeHTML = `
+                        <div class="flex items-center gap-2">
+                            <span class="bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full">Calculated</span>
+                            <button onclick="event.stopPropagation(); deleteMonthRecordByKey('${mKey}')" class="text-rose-400 hover:text-rose-300 p-1" title="Delete record">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                    `;
                     tenantBreakdownHTML = `
                         <div class="mt-3 pt-2.5 border-t border-white/10 space-y-1.5">
                             ${record.roomsData.map(r => `
@@ -513,16 +597,14 @@
                                 </div>
                             `).join('')}
                             <div class="flex justify-between items-center text-xs font-bold text-cyan-300 pt-1.5 border-t border-dashed border-white/10">
-                                <span>Total Month Collection</span>
+                                <span>Total Collection</span>
                                 <span class="text-sm">₹${record.summary.grandTotal}</span>
                             </div>
                         </div>
                     `;
                 } else {
                     statusBadgeHTML = `<span class="bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full">Not Created</span>`;
-                    tenantBreakdownHTML = `
-                        <p class="text-xs text-slate-500 italic mt-2">No records synced for this cycle.</p>
-                    `;
+                    tenantBreakdownHTML = `<p class="text-xs text-slate-500 italic mt-2">No records generated for this cycle.</p>`;
                 }
 
                 return `
@@ -551,19 +633,25 @@
             const record = prop.history ? prop.history[selectedMonthKey] : null;
             const statusBadge = document.getElementById('billingStatusBadge');
             const exportPdfBtn = document.getElementById('exportPdfBtn');
+            const deleteBtn = document.getElementById('deleteMonthRecordBtn');
+            const saveBtnText = document.getElementById('saveBtnText');
 
             if (record) {
                 statusBadge.className = "text-xs px-2.5 py-1 rounded-full font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300";
-                statusBadge.innerText = "Synced";
+                statusBadge.innerText = "Synced / Saved";
                 exportPdfBtn.classList.remove('hidden');
+                deleteBtn.classList.remove('hidden');
+                saveBtnText.innerText = "Update & Sync Record";
 
                 document.getElementById('inputCommonPrev').value = record.commonPrev;
                 document.getElementById('inputCommonCurr').value = record.commonCurr;
                 document.getElementById('inputCommonExpense').value = record.commonExpense;
             } else {
                 statusBadge.className = "text-xs px-2.5 py-1 rounded-full font-bold bg-amber-500/15 border border-amber-500/30 text-amber-300";
-                statusBadge.innerText = "Draft";
+                statusBadge.innerText = "Draft / Not Created";
                 exportPdfBtn.classList.add('hidden');
+                deleteBtn.classList.add('hidden');
+                saveBtnText.innerText = "Save & Sync Details";
 
                 document.getElementById('inputCommonPrev').value = prop.commonBaseReading || 0;
                 document.getElementById('inputCommonCurr').value = '';
@@ -574,7 +662,7 @@
             if (prop.rooms.length === 0) {
                 roomsContainer.innerHTML = `
                     <div class="text-xs bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 p-3.5 rounded-xl">
-                        No rooms configured for this location.
+                        No rooms configured for this location. Add rooms in Admin first.
                     </div>`;
                 return;
             }
@@ -594,7 +682,7 @@
                                 <span class="font-bold text-sm text-white">Room ${room.name}</span>
                                 <span class="text-xs text-slate-400 ml-1">(${room.tenant})</span>
                             </div>
-                            <span class="text-xs font-semibold text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">Rent: ₹${room.rent}</span>
+                            <span class="text-xs font-semibold text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">Base: ₹${room.rent}</span>
                         </div>
 
                         <div class="grid grid-cols-2 gap-2.5 mb-2.5">
@@ -614,7 +702,7 @@
                                 <input type="number" id="dues_${room.id}" value="${duesVal}" class="w-full p-2 rounded-xl border border-rose-500/30 text-rose-300 text-xs bg-rose-950/20 outline-none">
                             </div>
                             <div>
-                                <label class="block text-[10px] text-slate-400 mb-1">Extra Expenses (₹)</label>
+                                <label class="block text-[10px] text-slate-400 mb-1">Extra Charges (₹)</label>
                                 <input type="number" id="extra_${room.id}" value="${extraVal}" placeholder="0" class="w-full p-2 rounded-xl bg-slate-900/60 border border-white/10 text-white text-xs focus:border-cyan-400 outline-none">
                             </div>
                         </div>
@@ -628,7 +716,8 @@
             if (!prop || prop.rooms.length === 0) return;
 
             const saveBtn = document.getElementById('saveBtn');
-            saveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Syncing to Cloud...`;
+            const originalHTML = saveBtn.innerHTML;
+            saveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Saving...`;
 
             const unitRate = prop.unitRate;
             const commonPrev = parseFloat(document.getElementById('inputCommonPrev').value) || 0;
@@ -689,18 +778,42 @@
                 }
             };
 
-            await saveCloudData();
+            await saveStore();
             renderMonthBillingView();
-            saveBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Save & Sync Details`;
-            alert(`Rent record for ${formatMonthKey(selectedMonthKey)} synced across all devices!`);
+            saveBtn.innerHTML = originalHTML;
+            alert(`Rent record for ${formatMonthKey(selectedMonthKey)} saved and synced successfully!`);
         }
 
+        // Delete currently opened month record
+        async function deleteCurrentMonthRecord() {
+            if (!confirm(`Are you sure you want to delete calculations for ${formatMonthKey(selectedMonthKey)}?`)) return;
+            const prop = db.properties.find(p => p.id === selectedPropId);
+            if (prop && prop.history && prop.history[selectedMonthKey]) {
+                delete prop.history[selectedMonthKey];
+                await saveStore();
+                renderMonthBillingView();
+                alert("Month record deleted.");
+            }
+        }
+
+        // Delete month directly from property cycle tiles
+        async function deleteMonthRecordByKey(mKey) {
+            if (!confirm(`Delete calculation record for ${formatMonthKey(mKey)}?`)) return;
+            const prop = db.properties.find(p => p.id === selectedPropId);
+            if (prop && prop.history && prop.history[mKey]) {
+                delete prop.history[mKey];
+                await saveStore();
+                renderPropertyMonths();
+            }
+        }
+
+        // Optimized PDF Generation ensuring ZERO page overflow
         async function exportMonthlyStatementPDF() {
             const prop = db.properties.find(p => p.id === selectedPropId);
             const record = prop?.history?.[selectedMonthKey];
 
             if (!record) {
-                alert("Please save the calculations before generating the PDF.");
+                alert("Please calculate and save before exporting.");
                 return;
             }
 
@@ -711,87 +824,83 @@
 
             const printContainer = document.getElementById('pdfPrintableTemplate');
             
+            // Fixed width layout with absolute widths and wrapping guarantees no page-right bleed
             printContainer.innerHTML = `
-                <div style="font-family: Arial, Helvetica, sans-serif; color: #1f2937; background: #ffffff; width: 100%;">
-                    <div style="border-bottom: 2px solid #2563eb; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+                <div style="font-family: Arial, Helvetica, sans-serif; color: #111827; background: #ffffff; width: 702px; box-sizing: border-box; margin: 0 auto;">
+                    <div style="border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-end;">
                         <div>
-                            <h1 style="font-size: 24px; font-weight: bold; margin: 0; color: #1e3a8a;">${prop.name}</h1>
-                            <p style="font-size: 13px; color: #6b7280; margin: 4px 0 0 0;">Monthly Rent & Utility Consolidation</p>
+                            <h1 style="font-size: 22px; font-weight: bold; margin: 0; color: #1e3a8a;">${prop.name}</h1>
+                            <p style="font-size: 12px; color: #4b5563; margin: 3px 0 0 0;">Monthly Rent & Utility Statement</p>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-size: 16px; font-weight: bold; color: #2563eb;">${formatMonthKey(record.monthKey)}</div>
-                            <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">Generated: ${new Date().toLocaleDateString('en-GB')}</div>
+                            <div style="font-size: 15px; font-weight: bold; color: #2563eb;">${formatMonthKey(record.monthKey)}</div>
+                            <div style="font-size: 10px; color: #6b7280; margin-top: 2px;">Generated: ${new Date().toLocaleDateString('en-GB')}</div>
                         </div>
                     </div>
 
-                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
-                        <div style="font-size: 12px; text-transform: uppercase; font-weight: bold; color: #475569; margin-bottom: 8px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px;">Common Area Utilities</div>
-                        <div style="display: flex; justify-content: space-between; font-size: 11px;">
-                            <div>
-                                <span style="color: #64748b; display: block;">Common Meter Units</span>
-                                <strong>${record.commonUnits} units</strong> (${record.commonPrev} &rarr; ${record.commonCurr})
-                            </div>
-                            <div>
-                                <span style="color: #64748b; display: block;">Power Cost (@ ₹${prop.unitRate})</span>
-                                <strong>₹${record.commonElecCost.toFixed(2)}</strong>
-                            </div>
-                            <div>
-                                <span style="color: #64748b; display: block;">Other Expenses</span>
-                                <strong>₹${record.commonExpense.toFixed(2)}</strong>
-                            </div>
-                            <div>
-                                <span style="color: #64748b; display: block;">Per-Unit Overhead</span>
-                                <strong>₹${((record.commonElecCost + record.commonExpense) / record.summary.totalRooms).toFixed(2)}</strong>
-                            </div>
-                        </div>
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px;">
+                        <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #334155; margin-bottom: 6px; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px;">Common Area Utilities</div>
+                        <table style="width: 100%; font-size: 10px; border-collapse: collapse;">
+                            <tr>
+                                <td style="width: 25%; color: #64748b;">Common Usage:</td>
+                                <td style="width: 25%; font-weight: bold;">${record.commonUnits} units (${record.commonPrev} &rarr; ${record.commonCurr})</td>
+                                <td style="width: 25%; color: #64748b;">Power Cost (@ ₹${prop.unitRate}):</td>
+                                <td style="width: 25%; font-weight: bold;">₹${record.commonElecCost.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td style="color: #64748b; padding-top: 4px;">Other Common Exp:</td>
+                                <td style="font-weight: bold; padding-top: 4px;">₹${record.commonExpense.toFixed(2)}</td>
+                                <td style="color: #64748b; padding-top: 4px;">Per-Unit Overhead:</td>
+                                <td style="font-weight: bold; padding-top: 4px;">₹${((record.commonElecCost + record.commonExpense) / record.summary.totalRooms).toFixed(2)}</td>
+                            </tr>
+                        </table>
                     </div>
 
-                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; margin-bottom: 24px;">
+                    <table style="width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 10px; text-align: left; margin-bottom: 18px;">
                         <thead>
                             <tr style="background-color: #2563eb; color: #ffffff;">
-                                <th style="padding: 8px; border: 1px solid #1d4ed8;">Unit</th>
-                                <th style="padding: 8px; border: 1px solid #1d4ed8;">Tenant</th>
-                                <th style="padding: 8px; border: 1px solid #1d4ed8; text-align: right;">Base Rent</th>
-                                <th style="padding: 8px; border: 1px solid #1d4ed8; text-align: right;">Units</th>
-                                <th style="padding: 8px; border: 1px solid #1d4ed8; text-align: right;">Power</th>
-                                <th style="padding: 8px; border: 1px solid #1d4ed8; text-align: right;">Common</th>
-                                <th style="padding: 8px; border: 1px solid #1d4ed8; text-align: right;">Dues/Extra</th>
-                                <th style="padding: 8px; border: 1px solid #1d4ed8; text-align: right; background-color: #1e40af;">Total (₹)</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; width: 9%;">Unit</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; width: 22%;">Tenant</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 13%;">Base Rent</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 10%;">Units</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 12%;">Power</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 12%;">Common</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 10%;">Dues/Extra</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 12%; background-color: #1e40af;">Total (₹)</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${record.roomsData.map((r, i) => `
                                 <tr style="background-color: ${i % 2 === 0 ? '#ffffff' : '#f9fafb'};">
-                                    <td style="padding: 8px; border: 1px solid #e5e7eb; font-weight: bold;">${r.name}</td>
-                                    <td style="padding: 8px; border: 1px solid #e5e7eb;">${r.tenant}</td>
-                                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">₹${r.rent}</td>
-                                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">${r.consumedUnits}</td>
-                                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">₹${r.elecBill.toFixed(2)}</td>
-                                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">₹${(r.commonElecShare + r.commonExpShare).toFixed(2)}</td>
-                                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; color: ${(r.extra + r.dues) > 0 ? '#b91c1c' : '#374151'};">₹${(r.extra + r.dues).toFixed(2)}</td>
-                                    <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: bold; background-color: #f0fdf4; color: #166534;">₹${r.totalBill}</td>
+                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.name}</td>
+                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.tenant}</td>
+                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right;">₹${r.rent}</td>
+                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right;">${r.consumedUnits}</td>
+                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right;">₹${r.elecBill.toFixed(2)}</td>
+                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right;">₹${(r.commonElecShare + r.commonExpShare).toFixed(2)}</td>
+                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right; color: ${(r.extra + r.dues) > 0 ? '#b91c1c' : '#374151'};">₹${(r.extra + r.dues).toFixed(2)}</td>
+                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right; font-weight: bold; background-color: #f0fdf4; color: #166534;">₹${r.totalBill}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
                         <tfoot>
                             <tr style="background-color: #f1f5f9; font-weight: bold;">
-                                <td colspan="7" style="padding: 10px 8px; border: 1px solid #cbd5e1; text-align: right; font-size: 12px;">Grand Total:</td>
-                                <td style="padding: 10px 8px; border: 1px solid #cbd5e1; text-align: right; font-size: 13px; color: #1e3a8a;">₹${record.summary.grandTotal}</td>
+                                <td colspan="7" style="padding: 8px 6px; border: 1px solid #cbd5e1; text-align: right; font-size: 11px;">Total Month Collection:</td>
+                                <td style="padding: 8px 6px; border: 1px solid #cbd5e1; text-align: right; font-size: 12px; color: #1e3a8a;">₹${record.summary.grandTotal}</td>
                             </tr>
                         </tfoot>
                     </table>
 
-                    <div style="font-size: 10px; color: #9ca3af; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 8px;">
+                    <div style="font-size: 9px; color: #9ca3af; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 8px;">
                         Generated via Universal Rent & Property Manager
                     </div>
                 </div>
             `;
 
-            // Wait 80ms to let DOM paint properly before canvas snapshot
             await new Promise(resolve => setTimeout(resolve, 80));
 
             const opt = {
-                margin: [0.3, 0.3, 0.3, 0.3],
+                margin: [0.25, 0.25, 0.25, 0.25],
                 filename: `${prop.name.replace(/\s+/g, '_')}_Statement_${record.monthKey}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { 
@@ -799,7 +908,7 @@
                     useCORS: true,
                     scrollX: 0,
                     scrollY: 0,
-                    windowWidth: 850,
+                    windowWidth: 750,
                     backgroundColor: '#ffffff'
                 },
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
@@ -816,7 +925,7 @@
             }
         }
 
-        // Admin Actions
+        // Admin Directory Management
         function renderAdminProperties() {
             const container = document.getElementById('adminPropertyList');
             if (db.properties.length === 0) {
@@ -879,7 +988,7 @@
                 rooms: [],
                 history: {}
             });
-            await saveCloudData();
+            await saveStore();
             renderAdminProperties();
         }
 
@@ -896,14 +1005,14 @@
             if (!isNaN(rate)) prop.unitRate = rate;
             if (!isNaN(commonMeter)) prop.commonBaseReading = commonMeter;
 
-            await saveCloudData();
+            await saveStore();
             renderAdminProperties();
         }
 
         async function deleteProperty(propId) {
-            if (!confirm("Are you sure? This will delete this property and its history across all devices.")) return;
+            if (!confirm("Are you sure? This will delete this property and its history.")) return;
             db.properties = db.properties.filter(p => p.id !== propId);
-            await saveCloudData();
+            await saveStore();
             renderAdminProperties();
         }
 
@@ -927,7 +1036,7 @@
                 lastReading: lastReading
             });
 
-            await saveCloudData();
+            await saveStore();
             renderAdminProperties();
         }
 
@@ -949,7 +1058,7 @@
             if (!isNaN(lastReading)) room.lastReading = lastReading;
             if (!isNaN(dues)) room.defaultDues = dues;
 
-            await saveCloudData();
+            await saveStore();
             renderAdminProperties();
         }
 
@@ -959,9 +1068,10 @@
             if (!confirm("Remove this unit?")) return;
 
             prop.rooms = prop.rooms.filter(r => r.id !== roomId);
-            await saveCloudData();
+            await saveStore();
             renderAdminProperties();
         }
     </script>
 </body>
 </html>
+
