@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Universal Rent & Property Manager</title>
     
-    <!-- Mobile PWA Standalone Settings -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Rent Manager">
@@ -19,12 +18,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-    <!-- Dynamic High-Resolution App Icon Generator -->
     <script>
         (function() {
             const canvas = document.createElement('canvas');
@@ -104,14 +101,12 @@
 </head>
 <body class="bg-[#090d16] text-slate-100 font-sans pb-16 min-h-screen relative overflow-x-hidden selection:bg-cyan-500/30">
 
-    <!-- Ambient Glowing Radial Background -->
     <div class="fixed top-[-10%] left-[-10%] w-[380px] h-[380px] bg-blue-600/20 rounded-full blur-[110px] pointer-events-none"></div>
     <div class="fixed top-[40%] right-[-15%] w-[340px] h-[340px] bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none"></div>
     <div class="fixed bottom-[-10%] left-[20%] w-[360px] h-[360px] bg-indigo-600/15 rounded-full blur-[120px] pointer-events-none"></div>
 
     <div class="max-w-md mx-auto min-h-screen relative flex flex-col z-10">
         
-        <!-- App Header -->
         <header id="mainHeader" class="hidden backdrop-blur-xl bg-slate-900/60 border-b border-white/10 p-4 rounded-b-3xl sticky top-0 z-30 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]">
             <div class="flex justify-between items-center">
                 <div class="cursor-pointer flex items-center gap-2.5" onclick="navigateTo('home')">
@@ -124,7 +119,7 @@
                     <div>
                         <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
                             Rent Manager
-                            <span class="inline-block w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                            <span id="syncIndicator" class="inline-block w-1.5 h-1.5 rounded-full bg-cyan-400" title="Synchronized"></span>
                         </h1>
                         <p class="text-slate-400 text-xs font-medium" id="headerSubText">Dashboard</p>
                     </div>
@@ -142,7 +137,6 @@
 
         <main class="p-4 flex-1">
             
-            <!-- VIEW 0: AUTHENTICATION SCREEN -->
             <section id="view-auth" class="flex flex-col justify-center min-h-[75vh]">
                 <div class="backdrop-blur-xl bg-white/[0.05] border border-white/10 p-6 rounded-3xl shadow-2xl">
                     <div class="text-center mb-6">
@@ -181,7 +175,6 @@
                 </div>
             </section>
 
-            <!-- VIEW 1: PROPERTY LOCATIONS TILES -->
             <section id="view-home" class="hidden">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Locations</h2>
@@ -190,7 +183,6 @@
                 <div id="homePropertiesContainer" class="space-y-3"></div>
             </section>
 
-            <!-- VIEW 2: MONTH CYCLES TILES -->
             <section id="view-property-months" class="hidden">
                 <div class="backdrop-blur-md bg-white/[0.05] p-4 rounded-2xl border border-white/10 shadow-lg mb-4">
                     <h2 class="text-lg font-bold text-white tracking-wide" id="propDetailsName">Property Name</h2>
@@ -207,7 +199,6 @@
                 <div id="monthsListContainer" class="space-y-3"></div>
             </section>
 
-            <!-- VIEW 3: BILLING / EDIT / DELETE FORM -->
             <section id="view-month-billing" class="hidden">
                 <div class="flex justify-between items-center mb-3">
                     <div>
@@ -255,7 +246,6 @@
                 </div>
             </section>
 
-            <!-- VIEW 4: ADMIN MANAGEMENT PANEL -->
             <section id="view-admin" class="hidden">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Admin Directory</h2>
@@ -277,23 +267,20 @@
         </main>
     </div>
 
-    <!-- Scaled In-Viewport Off-screen Printable Template -->
     <div style="position: fixed; top: 0; left: 0; width: 750px; height: 0; overflow: hidden; z-index: -50; pointer-events: none;">
         <div id="pdfPrintableTemplate" style="width: 750px; background-color: #ffffff; color: #111827; padding: 24px; box-sizing: border-box;"></div>
     </div>
 
     <script>
-           <script>
-        // Firebase Config credentials (optional: if blank, works in Offline LocalStorage Mode)
-         const firebaseConfig = {
-  apiKey: "AIzaSyAFHn1LLEYgG2-gPlImQQ6AsXY183r5AgI",
-  authDomain: "kira-15433.firebaseapp.com",
-  projectId: "kira-15433",
-  storageBucket: "kira-15433.firebasestorage.app",
-  messagingSenderId: "39799805654",
-  appId: "1:39799805654:web:36a80f7bfa3138bc879b77",
-  measurementId: "G-C265XTC6RG"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFHn1LLEYgG2-gPlImQQ6AsXY183r5AgI",
+            authDomain: "kira-15433.firebaseapp.com",
+            projectId: "kira-15433",
+            storageBucket: "kira-15433.firebasestorage.app",
+            messagingSenderId: "39799805654",
+            appId: "1:39799805654:web:36a80f7bfa3138bc879b77",
+            measurementId: "G-C265XTC6RG"
+        };
 
         const LOCAL_STORAGE_KEY = 'universal_rent_manager_store';
         const LOCAL_AUTH_KEY = 'universal_rent_auth_flag';
@@ -302,6 +289,7 @@
         let firestore = null;
         let currentUser = null;
         let isCloudMode = false;
+        let cloudSyncTimeout = null;
 
         let db = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || {
             properties: [
@@ -319,14 +307,37 @@
             ]
         };
 
-        // Instant saving helper: Updates localStorage immediately, then syncs to Cloud silently
-        async function saveStore() {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(db));
+        // Instant saving helper: Updates localStorage immediately, then syncs to Cloud asynchronously
+        function saveStore(syncCloudImmediate = false) {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(db));
+            } catch (e) {
+                console.error("Local storage quota error:", e);
+            }
+
+            const syncDot = document.getElementById('syncIndicator');
+            if (syncDot) syncDot.classList.add('animate-ping');
+
             if (isCloudMode && currentUser) {
-                // Background sync (doesn't block UI)
-                firestore.collection('user_stores').doc(currentUser.uid).set(db, { merge: true }).catch(err => {
-                    console.warn("Background cloud sync pending:", err);
-                });
+                if (syncCloudImmediate) {
+                    executeCloudSave();
+                } else {
+                    clearTimeout(cloudSyncTimeout);
+                    cloudSyncTimeout = setTimeout(executeCloudSave, 400);
+                }
+            } else {
+                if (syncDot) syncDot.classList.remove('animate-ping');
+            }
+        }
+
+        async function executeCloudSave() {
+            const syncDot = document.getElementById('syncIndicator');
+            try {
+                await firestore.collection('user_stores').doc(currentUser.uid).set(db, { merge: true });
+            } catch (err) {
+                console.warn("Background sync error:", err);
+            } finally {
+                if (syncDot) syncDot.classList.remove('animate-ping');
             }
         }
 
@@ -344,14 +355,13 @@
                         document.getElementById('mainHeader').classList.remove('hidden');
                         document.getElementById('userDisplayEmail').innerText = user.email;
                         
-                        // Load cloud data once on login
                         try {
                             const doc = await firestore.collection('user_stores').doc(user.uid).get();
                             if (doc.exists) {
                                 db = doc.data();
                                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(db));
                             } else {
-                                await saveStore();
+                                saveStore(true);
                             }
                         } catch(e) {
                             console.warn("Using local cache due to network check");
@@ -521,13 +531,6 @@
             } else if (currentView === 'property-months' || currentView === 'admin') {
                 navigateTo('home');
             }
-        }
-
-        function refreshCurrentView() {
-            if (currentView === 'home') renderHomeProperties();
-            else if (currentView === 'property-months') renderPropertyMonths();
-            else if (currentView === 'admin') renderAdminProperties();
-            else if (currentView === 'month-billing') renderMonthBillingView();
         }
 
         function renderHomeProperties() {
@@ -716,9 +719,13 @@
             }).join('');
         }
 
-        async function saveMonthlyCalculations() {
+        function saveMonthlyCalculations() {
             const prop = db.properties.find(p => p.id === selectedPropId);
             if (!prop || prop.rooms.length === 0) return;
+
+            const saveBtn = document.getElementById('saveBtn');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Saving...`;
 
             const unitRate = prop.unitRate;
             const commonPrev = parseFloat(document.getElementById('inputCommonPrev').value) || 0;
@@ -779,28 +786,28 @@
                 }
             };
 
-            await saveStore();
+            // Instant local write, async cloud backup
+            saveStore(true);
             renderMonthBillingView();
-            alert(`Rent record for ${formatMonthKey(selectedMonthKey)} saved instantly!`);
+            saveBtn.innerHTML = originalText;
         }
 
-        async function deleteCurrentMonthRecord() {
-            if (!confirm(`Are you sure you want to delete calculations for ${formatMonthKey(selectedMonthKey)}?`)) return;
+        function deleteCurrentMonthRecord() {
+            if (!confirm(`Delete calculations for ${formatMonthKey(selectedMonthKey)}?`)) return;
             const prop = db.properties.find(p => p.id === selectedPropId);
             if (prop && prop.history && prop.history[selectedMonthKey]) {
                 delete prop.history[selectedMonthKey];
-                await saveStore();
+                saveStore(true);
                 renderMonthBillingView();
-                alert("Month record deleted.");
             }
         }
 
-        async function deleteMonthRecordByKey(mKey) {
+        function deleteMonthRecordByKey(mKey) {
             if (!confirm(`Delete calculation record for ${formatMonthKey(mKey)}?`)) return;
             const prop = db.properties.find(p => p.id === selectedPropId);
             if (prop && prop.history && prop.history[mKey]) {
                 delete prop.history[mKey];
-                await saveStore();
+                saveStore(true);
                 renderPropertyMonths();
             }
         }
@@ -855,14 +862,16 @@
                     <table style="width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 10px; text-align: left; margin-bottom: 18px;">
                         <thead>
                             <tr style="background-color: #2563eb; color: #ffffff;">
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; width: 9%;">Unit</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; width: 22%;">Tenant</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 13%;">Base Rent</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 10%;">Units</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 12%;">Power</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 12%;">Common</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 10%;">Dues/Extra</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 12%; background-color: #1e40af;">Total (₹)</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; width: 8%;">Unit</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; width: 17%;">Tenant</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 11%;">Base Rent</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 9%;">Prev Rd</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 9%;">Curr Rd</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 8%;">Units</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 11%;">Power</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 10%;">Common</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 8%;">Dues</th>
+                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 9%; background-color: #1e40af;">Total (₹)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -871,6 +880,8 @@
                                     <td style="padding: 6px 4px; border: 1px solid #e5e7eb; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.name}</td>
                                     <td style="padding: 6px 4px; border: 1px solid #e5e7eb; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.tenant}</td>
                                     <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right;">₹${r.rent}</td>
+                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right; color: #4b5563;">${r.prevReading}</td>
+                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">${r.currReading}</td>
                                     <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right;">${r.consumedUnits}</td>
                                     <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right;">₹${r.elecBill.toFixed(2)}</td>
                                     <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right;">₹${(r.commonElecShare + r.commonExpShare).toFixed(2)}</td>
@@ -881,7 +892,7 @@
                         </tbody>
                         <tfoot>
                             <tr style="background-color: #f1f5f9; font-weight: bold;">
-                                <td colspan="7" style="padding: 8px 6px; border: 1px solid #cbd5e1; text-align: right; font-size: 11px;">Total Month Collection:</td>
+                                <td colspan="9" style="padding: 8px 6px; border: 1px solid #cbd5e1; text-align: right; font-size: 11px;">Total Month Collection:</td>
                                 <td style="padding: 8px 6px; border: 1px solid #cbd5e1; text-align: right; font-size: 12px; color: #1e3a8a;">₹${record.summary.grandTotal}</td>
                             </tr>
                         </tfoot>
@@ -921,7 +932,32 @@
             }
         }
 
-        // Admin Directory Management with Direct "Save Changes" Buttons
+        // Live Admin Input Updates (Synchronized on edit, no form freezing)
+        function updatePropField(propId, field, value) {
+            const prop = db.properties.find(p => p.id === propId);
+            if (!prop) return;
+            if (field === 'unitRate' || field === 'commonBaseReading') {
+                prop[field] = parseFloat(value) || 0;
+            } else {
+                prop[field] = value.trim();
+            }
+            saveStore();
+        }
+
+        function updateRoomField(propId, roomId, field, value) {
+            const prop = db.properties.find(p => p.id === propId);
+            if (!prop) return;
+            const room = prop.rooms.find(r => r.id === roomId);
+            if (!room) return;
+
+            if (field === 'rent' || field === 'lastReading') {
+                room[field] = parseFloat(value) || 0;
+            } else {
+                room[field] = value.trim();
+            }
+            saveStore();
+        }
+
         function renderAdminProperties() {
             const container = document.getElementById('adminPropertyList');
             if (db.properties.length === 0) {
@@ -930,21 +966,21 @@
             }
 
             container.innerHTML = db.properties.map(p => `
-                <div class="backdrop-blur-md bg-white/[0.05] border border-white/10 rounded-2xl p-4 shadow-lg mb-4" id="adminPropCard_${p.id}">
+                <div class="backdrop-blur-md bg-white/[0.05] border border-white/10 rounded-2xl p-4 shadow-lg mb-4">
                     <div class="flex justify-between items-start mb-3 border-b border-white/10 pb-2">
                         <div class="space-y-2 flex-1 mr-2">
                             <div>
                                 <label class="block text-[10px] text-slate-400 mb-0.5 font-semibold">Location Name</label>
-                                <input type="text" id="adminPropName_${p.id}" value="${p.name}" class="w-full p-2 rounded-xl bg-slate-900/60 border border-white/10 text-white text-xs outline-none focus:border-cyan-400 font-bold">
+                                <input type="text" value="${p.name}" oninput="updatePropField('${p.id}', 'name', this.value)" class="w-full p-2 rounded-xl bg-slate-900/60 border border-white/10 text-white text-xs outline-none focus:border-cyan-400 font-bold">
                             </div>
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <label class="block text-[10px] text-slate-400 mb-0.5">Unit Rate (₹)</label>
-                                    <input type="number" id="adminPropRate_${p.id}" value="${p.unitRate}" class="w-full p-2 rounded-xl bg-slate-900/60 border border-white/10 text-white text-xs outline-none focus:border-cyan-400">
+                                    <input type="number" step="any" value="${p.unitRate}" oninput="updatePropField('${p.id}', 'unitRate', this.value)" class="w-full p-2 rounded-xl bg-slate-900/60 border border-white/10 text-white text-xs outline-none focus:border-cyan-400">
                                 </div>
                                 <div>
                                     <label class="block text-[10px] text-slate-400 mb-0.5">Common Meter Base</label>
-                                    <input type="number" id="adminPropCommon_${p.id}" value="${p.commonBaseReading || 0}" class="w-full p-2 rounded-xl bg-slate-900/60 border border-white/10 text-white text-xs outline-none focus:border-cyan-400">
+                                    <input type="number" step="any" value="${p.commonBaseReading || 0}" oninput="updatePropField('${p.id}', 'commonBaseReading', this.value)" class="w-full p-2 rounded-xl bg-slate-900/60 border border-white/10 text-white text-xs outline-none focus:border-cyan-400">
                                 </div>
                             </div>
                         </div>
@@ -955,7 +991,6 @@
                         </div>
                     </div>
 
-                    <!-- Rooms List -->
                     <div class="space-y-2.5 mb-3">
                         <div class="flex justify-between items-center text-xs font-bold text-slate-400">
                             <span>Rooms / Tenants</span>
@@ -965,25 +1000,25 @@
                         ${p.rooms.length === 0 ? '<p class="text-[11px] text-slate-500 italic">No rooms registered.</p>' : ''}
 
                         ${p.rooms.map(r => `
-                            <div class="bg-slate-900/50 p-3 rounded-xl border border-white/5 space-y-2" data-room-id="${r.id}">
+                            <div class="bg-slate-900/50 p-3 rounded-xl border border-white/5 space-y-2">
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="block text-[9px] text-slate-400 mb-0.5">Room No.</label>
-                                        <input type="text" id="rName_${p.id}_${r.id}" value="${r.name}" class="w-full p-1.5 rounded-lg bg-slate-950 border border-white/10 text-white text-xs outline-none">
+                                        <input type="text" value="${r.name}" oninput="updateRoomField('${p.id}', '${r.id}', 'name', this.value)" class="w-full p-1.5 rounded-lg bg-slate-950 border border-white/10 text-white text-xs outline-none">
                                     </div>
                                     <div>
                                         <label class="block text-[9px] text-slate-400 mb-0.5">Tenant Name</label>
-                                        <input type="text" id="rTenant_${p.id}_${r.id}" value="${r.tenant}" class="w-full p-1.5 rounded-lg bg-slate-950 border border-white/10 text-white text-xs outline-none">
+                                        <input type="text" value="${r.tenant}" oninput="updateRoomField('${p.id}', '${r.id}', 'tenant', this.value)" class="w-full p-1.5 rounded-lg bg-slate-950 border border-white/10 text-white text-xs outline-none">
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-3 gap-2">
                                     <div>
                                         <label class="block text-[9px] text-slate-400 mb-0.5">Rent (₹)</label>
-                                        <input type="number" id="rRent_${p.id}_${r.id}" value="${r.rent}" class="w-full p-1.5 rounded-lg bg-slate-950 border border-white/10 text-white text-xs outline-none">
+                                        <input type="number" step="any" value="${r.rent}" oninput="updateRoomField('${p.id}', '${r.id}', 'rent', this.value)" class="w-full p-1.5 rounded-lg bg-slate-950 border border-white/10 text-white text-xs outline-none">
                                     </div>
                                     <div>
                                         <label class="block text-[9px] text-slate-400 mb-0.5">Last Meter</label>
-                                        <input type="number" id="rRead_${p.id}_${r.id}" value="${r.lastReading}" class="w-full p-1.5 rounded-lg bg-slate-950 border border-white/10 text-white text-xs outline-none">
+                                        <input type="number" step="any" value="${r.lastReading}" oninput="updateRoomField('${p.id}', '${r.id}', 'lastReading', this.value)" class="w-full p-1.5 rounded-lg bg-slate-950 border border-white/10 text-white text-xs outline-none">
                                     </div>
                                     <div class="flex items-end justify-end">
                                         <button onclick="deleteRoom('${p.id}', '${r.id}')" class="text-rose-400 hover:bg-rose-500/10 p-1.5 rounded-lg text-xs" title="Remove Room"><i class="fa-solid fa-trash-can"></i></button>
@@ -993,15 +1028,19 @@
                         `).join('')}
                     </div>
 
-                    <!-- Location Save Button -->
-                    <button onclick="savePropertyChanges('${p.id}')" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold py-2.5 rounded-xl shadow transition text-xs flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-check"></i> Save Changes for ${p.name}
+                    <button onclick="saveLocationComplete('${p.id}')" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold py-2.5 rounded-xl shadow transition text-xs flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-check"></i> Save & Finish Changes
                     </button>
                 </div>
             `).join('');
         }
 
-        async function openCreatePropertyPrompt() {
+        function saveLocationComplete(propId) {
+            saveStore(true);
+            alert("All changes saved successfully!");
+        }
+
+        function openCreatePropertyPrompt() {
             const name = prompt("Location / Property Name:");
             if (!name) return;
             const rate = parseFloat(prompt("Electricity Unit Rate (₹):", "8")) || 0;
@@ -1015,60 +1054,24 @@
                 rooms: [],
                 history: {}
             });
-            await saveStore();
+            saveStore(true);
             renderAdminProperties();
         }
 
-        // Save modifications made directly inside the Admin input fields
-        async function savePropertyChanges(propId) {
-            const prop = db.properties.find(p => p.id === propId);
-            if (!prop) return;
-
-            const newName = document.getElementById(`adminPropName_${propId}`).value.trim();
-            const newRate = parseFloat(document.getElementById(`adminPropRate_${propId}`).value) || 0;
-            const newCommon = parseFloat(document.getElementById(`adminPropCommon_${propId}`).value) || 0;
-
-            if (!newName) {
-                alert("Location name cannot be empty.");
-                return;
-            }
-
-            prop.name = newName;
-            prop.unitRate = newRate;
-            prop.commonBaseReading = newCommon;
-
-            // Update rooms from inputs
-            prop.rooms.forEach(r => {
-                const rNameInput = document.getElementById(`rName_${propId}_${r.id}`);
-                const rTenantInput = document.getElementById(`rTenant_${propId}_${r.id}`);
-                const rRentInput = document.getElementById(`rRent_${propId}_${r.id}`);
-                const rReadInput = document.getElementById(`rRead_${propId}_${r.id}`);
-
-                if (rNameInput) r.name = rNameInput.value.trim();
-                if (rTenantInput) r.tenant = rTenantInput.value.trim();
-                if (rRentInput) r.rent = parseFloat(rRentInput.value) || 0;
-                if (rReadInput) r.lastReading = parseFloat(rReadInput.value) || 0;
-            });
-
-            await saveStore();
-            renderAdminProperties();
-            alert(`Changes for "${prop.name}" saved successfully!`);
-        }
-
-        async function deleteProperty(propId) {
-            if (!confirm("Are you sure? This will delete this property and all its history.")) return;
+        function deleteProperty(propId) {
+            if (!confirm("Delete this property and all its history?")) return;
             db.properties = db.properties.filter(p => p.id !== propId);
-            await saveStore();
+            saveStore(true);
             renderAdminProperties();
         }
 
-        async function openAddRoomPrompt(propId) {
+        function openAddRoomPrompt(propId) {
             const prop = db.properties.find(p => p.id === propId);
             if (!prop) return;
 
             const name = prompt("Room Name/No:");
             if (!name) return;
-            const tenant = prompt("Tenant Name:", "John Doe") || "Tenant";
+            const tenant = prompt("Tenant Name:", "New Tenant") || "Tenant";
             const rent = parseFloat(prompt("Base Rent (₹):", "7000")) || 0;
             const lastReading = parseFloat(prompt("Base Meter Reading:", "0")) || 0;
 
@@ -1081,17 +1084,17 @@
                 lastReading: lastReading
             });
 
-            await saveStore();
+            saveStore(true);
             renderAdminProperties();
         }
 
-        async function deleteRoom(propId, roomId) {
+        function deleteRoom(propId, roomId) {
             const prop = db.properties.find(p => p.id === propId);
             if (!prop) return;
             if (!confirm("Remove this unit?")) return;
 
             prop.rooms = prop.rooms.filter(r => r.id !== roomId);
-            await saveStore();
+            saveStore(true);
             renderAdminProperties();
         }
     </script>
