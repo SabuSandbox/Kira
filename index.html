@@ -1,18 +1,18 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Universal Rent & Property Manager</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Rent Manager">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#090d16">
+    <meta name="theme-color" content="#000000">
 
-    <link rel="apple-touch-icon" sizes="180x180" href="Image.PNG">
-    <link rel="icon" type="image/png" sizes="192x192" href="Image.PNG">
+    <link rel="apple-touch-icon" sizes="180x180" href="image.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="image.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -21,172 +21,181 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-</head>
-<body class="bg-[#090d16] text-slate-100 font-sans pb-16 min-h-screen relative overflow-x-hidden selection:bg-cyan-500/30">
 
-    <div class="fixed top-[-10%] left-[-10%] w-[380px] h-[380px] bg-blue-600/20 rounded-full blur-[110px] pointer-events-none"></div>
-    <div class="fixed top-[40%] right-[-15%] w-[340px] h-[340px] bg-cyan-500/15 rounded-full blur-[100px] pointer-events-none"></div>
-    <div class="fixed bottom-[-10%] left-[20%] w-[360px] h-[360px] bg-indigo-600/15 rounded-full blur-[120px] pointer-events-none"></div>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        /* iOS style scrollbar hiding */
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-black text-white pb-16 min-h-screen relative overflow-x-hidden selection:bg-[#0a84ff]/30">
 
     <div class="max-w-md mx-auto min-h-screen relative flex flex-col z-10">
         
-        <header id="mainHeader" class="hidden backdrop-blur-xl bg-slate-900/60 border-b border-white/10 p-4 rounded-b-3xl sticky top-0 z-30 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]">
-            <div class="flex justify-between items-center">
-                <div class="cursor-pointer flex items-center gap-2.5" onclick="navigateTo('home')">
-                    <img src='Image.PNG" alt="App Logo" class="w-9 h-9 rounded-xl bg-white/[0.08] border border-white/15 p-1.5 object-contain shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]">
+        <header id="mainHeader" class="hidden backdrop-blur-2xl bg-black/80 border-b border-[#38383a] px-4 pt-10 pb-3 sticky top-0 z-30">
+            <div class="flex justify-between items-center mb-1">
+                <button id="backBtn" onclick="handleBackNavigation()" class="hidden text-[#0a84ff] text-[17px] font-normal tracking-tight active:opacity-60 transition flex items-center gap-1">
+                    <i class="fa-solid fa-chevron-left"></i> Back
+                </button>
+                <div class="flex-1"></div>
+                <button id="adminBtn" onclick="navigateTo('admin')" class="bg-[#1c1c1e] text-[#0a84ff] px-3 py-1.5 rounded-full text-[13px] font-medium transition flex items-center gap-1.5 active:scale-95">
+                    <i class="fa-solid fa-sliders"></i> Admin
+                </button>
+            </div>
+            
+            <div class="flex justify-between items-end mt-2">
+                <div class="cursor-pointer flex items-center gap-3" onclick="navigateTo('home')">
+                    <img src="image.png" alt="App Logo" class="w-10 h-10 rounded-xl object-contain shadow-sm bg-white">
                     <div>
-                        <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
+                        <h1 class="text-[28px] font-bold tracking-tight text-white leading-tight flex items-center gap-1.5">
                             Rent Manager
-                            <span id="syncIndicator" class="inline-block w-1.5 h-1.5 rounded-full bg-cyan-400" title="Synchronized"></span>
+                            <span id="syncIndicator" class="inline-block w-2 h-2 rounded-full bg-[#32d74b] shadow-[0_0_8px_#32d74b]" title="Synchronized"></span>
                         </h1>
-                        <p class="text-slate-400 text-xs font-medium" id="headerSubText">Dashboard</p>
+                        <p class="text-[#8e8e93] text-[13px] font-medium -mt-0.5" id="headerSubText">Locations</p>
                     </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button id="adminBtn" onclick="navigateTo('admin')" class="backdrop-blur-md bg-white/[0.08] hover:bg-white/[0.14] border border-white/15 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm active:scale-95">
-                        <i class="fa-solid fa-sliders text-cyan-400"></i> Admin
-                    </button>
-                    <button id="backBtn" onclick="handleBackNavigation()" class="hidden backdrop-blur-md bg-white/[0.08] hover:bg-white/[0.14] border border-white/15 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm active:scale-95">
-                        <i class="fa-solid fa-arrow-left"></i> Back
-                    </button>
                 </div>
             </div>
         </header>
 
         <main class="p-4 flex-1">
             
-            <section id="view-auth" class="flex flex-col justify-center min-h-[75vh]">
-                <div class="backdrop-blur-xl bg-white/[0.05] border border-white/10 p-6 rounded-3xl shadow-2xl">
-                    <div class="text-center mb-6">
-                        <div class="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 mx-auto mb-3 flex items-center justify-center p-2">
-                            <img src="Image.PNG" alt="App Logo" class="w-full h-full object-contain drop-shadow-md">
-                        </div>
-                        <h2 class="text-xl font-bold text-white tracking-wide">Sync Login</h2>
-                        <p class="text-xs text-slate-400 mt-1">Authenticate once to synchronize across devices.</p>
+            <section id="view-auth" class="flex flex-col justify-center min-h-[85vh]">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 mx-auto mb-4 bg-white rounded-2xl shadow-xl overflow-hidden p-2">
+                        <img src="image.png" alt="App Logo" class="w-full h-full object-contain">
+                    </div>
+                    <h2 class="text-[28px] font-bold text-white tracking-tight">Sync & Backup</h2>
+                    <p class="text-[15px] text-[#8e8e93] mt-2 px-6">Sign in to securely synchronize your property data across all your devices.</p>
+                </div>
+
+                <div class="space-y-4 bg-[#1c1c1e] p-5 rounded-[24px]">
+                    <div>
+                        <input type="email" id="authEmail" placeholder="Email" class="w-full p-4 rounded-xl bg-[#2c2c2e] text-white text-[17px] placeholder-[#8e8e93] focus:ring-2 focus:ring-[#0a84ff] outline-none transition">
+                    </div>
+                    <div>
+                        <input type="password" id="authPassword" placeholder="Password" class="w-full p-4 rounded-xl bg-[#2c2c2e] text-white text-[17px] placeholder-[#8e8e93] focus:ring-2 focus:ring-[#0a84ff] outline-none transition">
                     </div>
 
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">Email / ID</label>
-                            <input type="email" id="authEmail" placeholder="admin@rentmanager.com" class="w-full p-3 rounded-xl bg-slate-900/60 border border-white/10 text-white text-xs placeholder-slate-600 focus:border-cyan-400 outline-none transition">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">Password</label>
-                            <input type="password" id="authPassword" placeholder="••••••••" class="w-full p-3 rounded-xl bg-slate-900/60 border border-white/10 text-white text-xs placeholder-slate-600 focus:border-cyan-400 outline-none transition">
-                        </div>
+                    <div id="authErrorMsg" class="hidden text-[13px] text-[#ff453a] bg-[#ff453a]/10 p-3 rounded-xl text-center font-medium"></div>
 
-                        <div id="authErrorMsg" class="hidden text-xs text-rose-400 bg-rose-950/30 border border-rose-500/30 p-2.5 rounded-lg text-center font-medium"></div>
-
-                        <div class="flex gap-2 pt-2">
-                            <button onclick="handleLogin()" id="loginBtn" class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-[0.98] text-xs">
-                                Log In
-                            </button>
-                            <button onclick="handleSignup()" class="px-4 backdrop-blur-md bg-white/[0.08] hover:bg-white/[0.14] border border-white/15 text-slate-300 font-bold py-3 rounded-xl transition text-xs">
-                                Register
-                            </button>
-                        </div>
-                        
-                        <button onclick="continueOffline()" class="w-full text-center text-xs text-slate-500 hover:text-cyan-400 pt-1 transition">
-                            Continue Offline (Local Storage Mode)
+                    <div class="flex flex-col gap-3 pt-2">
+                        <button onclick="handleLogin()" id="loginBtn" class="w-full bg-[#0a84ff] text-white font-semibold py-4 rounded-xl transition-all active:scale-[0.98] text-[17px]">
+                            Log In
+                        </button>
+                        <button onclick="handleSignup()" class="w-full bg-[#2c2c2e] text-white font-semibold py-4 rounded-xl transition active:scale-[0.98] text-[17px]">
+                            Create Account
                         </button>
                     </div>
+                    
+                    <button onclick="continueOffline()" class="w-full text-center text-[15px] text-[#0a84ff] font-medium pt-3 active:opacity-60 transition">
+                        Continue Offline Mode
+                    </button>
                 </div>
             </section>
 
             <section id="view-home" class="hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Locations</h2>
-                    <span id="propCountBadge" class="text-xs bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 font-semibold px-2.5 py-0.5 rounded-full">0 Locations</span>
+                <div class="flex justify-between items-center mb-3 px-1">
+                    <h2 class="text-[13px] font-semibold uppercase text-[#8e8e93] tracking-wide">My Properties</h2>
+                    <span id="propCountBadge" class="text-[13px] text-[#8e8e93] font-medium">0</span>
                 </div>
                 <div id="homePropertiesContainer" class="space-y-3"></div>
             </section>
 
             <section id="view-property-months" class="hidden">
-                <div class="backdrop-blur-md bg-white/[0.05] p-4 rounded-2xl border border-white/10 shadow-lg mb-4">
-                    <h2 class="text-lg font-bold text-white tracking-wide" id="propDetailsName">Property Name</h2>
-                    <div class="flex flex-wrap items-center gap-3 text-xs text-slate-300 mt-2 font-medium">
-                        <span><i class="fa-solid fa-bolt text-amber-400 mr-1"></i>₹<span id="propDetailsRate">0</span>/unit</span>
-                        <span class="text-slate-600">•</span>
-                        <span><i class="fa-solid fa-gauge-high text-cyan-400 mr-1"></i>Common Base: <span id="propDetailsCommonMeter">0</span></span>
-                        <span class="text-slate-600">•</span>
-                        <span><i class="fa-solid fa-door-open text-blue-400 mr-1"></i><span id="propDetailsRooms">0</span> Units</span>
+                <div class="bg-[#1c1c1e] p-5 rounded-[24px] mb-6 shadow-sm">
+                    <h2 class="text-[22px] font-bold text-white tracking-tight" id="propDetailsName">Property Name</h2>
+                    <div class="flex flex-wrap items-center gap-3 text-[14px] text-[#8e8e93] mt-2 font-medium">
+                        <span class="bg-[#2c2c2e] px-2.5 py-1 rounded-lg text-white">₹<span id="propDetailsRate">0</span>/unit</span>
+                        <span class="bg-[#2c2c2e] px-2.5 py-1 rounded-lg text-white"><span id="propDetailsRooms">0</span> Units</span>
                     </div>
                 </div>
 
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Billing Cycles</h3>
-                <div id="monthsListContainer" class="space-y-3"></div>
+                <div class="px-1 mb-2">
+                    <h3 class="text-[13px] font-semibold uppercase text-[#8e8e93] tracking-wide">Billing Cycles</h3>
+                </div>
+                <div id="monthsListContainer" class="bg-[#1c1c1e] rounded-[24px] overflow-hidden divide-y divide-[#38383a]"></div>
             </section>
 
             <section id="view-month-billing" class="hidden">
-                <div class="flex justify-between items-center mb-3">
+                <div class="flex justify-between items-center mb-4 px-1">
                     <div>
-                        <h2 class="text-base font-bold text-white" id="billingMonthTitle">Month Year</h2>
-                        <p class="text-xs text-slate-400" id="billingLocationSubtitle">Location</p>
+                        <h2 class="text-[22px] font-bold text-white tracking-tight" id="billingMonthTitle">Month Year</h2>
+                        <p class="text-[15px] text-[#8e8e93]" id="billingLocationSubtitle">Location</p>
                     </div>
-                    <span id="billingStatusBadge" class="text-xs px-2.5 py-1 rounded-full font-bold">Status</span>
+                    <span id="billingStatusBadge" class="text-[13px] px-3 py-1.5 rounded-full font-semibold">Status</span>
                 </div>
 
-                <div class="backdrop-blur-md bg-white/[0.05] p-4 rounded-2xl border border-white/10 shadow-lg mb-4">
-                    <h3 class="text-xs font-bold uppercase text-slate-300 mb-3 border-b border-white/10 pb-1.5 flex items-center gap-1.5">
-                        <i class="fa-solid fa-circle-nodes text-cyan-400"></i> Common Area Utilities
+                <div class="bg-[#1c1c1e] p-5 rounded-[24px] mb-5">
+                    <h3 class="text-[15px] font-semibold text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-bolt text-[#ffcc00]"></i> Common Area Setup
                     </h3>
                     
-                    <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="grid grid-cols-2 gap-3 mb-4">
                         <div>
-                            <label class="block text-[11px] text-slate-400 mb-1">Common Prev Read</label>
-                            <input type="number" id="inputCommonPrev" class="w-full p-2.5 rounded-xl bg-slate-900/60 border border-white/10 text-white text-xs outline-none focus:border-cyan-400">
+                            <label class="block text-[13px] text-[#8e8e93] mb-1.5 font-medium">Previous Reading</label>
+                            <input type="number" id="inputCommonPrev" class="w-full p-3 rounded-xl bg-[#2c2c2e] text-white text-[15px] outline-none focus:ring-2 focus:ring-[#0a84ff]">
                         </div>
                         <div>
-                            <label class="block text-[11px] text-cyan-300 font-semibold mb-1">Common Curr Read</label>
-                            <input type="number" id="inputCommonCurr" placeholder="0" class="w-full p-2.5 rounded-xl bg-cyan-950/30 border border-cyan-500/30 text-cyan-200 text-xs outline-none focus:border-cyan-400">
+                            <label class="block text-[13px] text-[#0a84ff] mb-1.5 font-medium">Current Reading</label>
+                            <input type="number" id="inputCommonCurr" placeholder="0" class="w-full p-3 rounded-xl bg-[#2c2c2e] border border-[#0a84ff]/30 text-white text-[15px] outline-none focus:ring-2 focus:ring-[#0a84ff]">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-[11px] text-slate-300 font-semibold mb-1">Common Expenses (₹)</label>
-                        <input type="number" id="inputCommonExpense" placeholder="0" class="w-full p-2.5 rounded-xl bg-slate-900/60 border border-white/10 text-white text-xs outline-none focus:border-cyan-400">
+                        <label class="block text-[13px] text-[#8e8e93] mb-1.5 font-medium">Shared Expenses (₹)</label>
+                        <input type="number" id="inputCommonExpense" placeholder="0" class="w-full p-3 rounded-xl bg-[#2c2c2e] text-white text-[15px] outline-none focus:ring-2 focus:ring-[#0a84ff]">
                     </div>
                 </div>
 
-                <h3 class="text-xs font-bold uppercase text-slate-400 mb-2">Tenant Unit Readings</h3>
-                <div id="billingRoomsContainer" class="space-y-3 mb-5"></div>
+                <div class="px-1 mb-2 flex justify-between items-center">
+                    <h3 class="text-[13px] font-semibold uppercase text-[#8e8e93] tracking-wide">Tenant Units</h3>
+                </div>
+                
+                <div id="billingRoomsContainer" class="space-y-4 mb-8"></div>
 
-                <div class="space-y-2.5 mb-8">
-                    <button onclick="saveMonthlyCalculations()" id="saveBtn" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm border border-white/15">
-                        <i class="fa-solid fa-floppy-disk"></i> <span id="saveBtnText">Save Details</span>
+                <div class="space-y-3 mb-8 bg-[#1c1c1e] p-5 rounded-[24px]">
+                    <button onclick="saveMonthlyCalculations()" id="saveBtn" class="w-full bg-[#0a84ff] text-white font-semibold py-4 rounded-xl transition-all active:scale-[0.98] text-[17px]">
+                        <span id="saveBtnText">Save Calculations</span>
                     </button>
-                    <button id="exportPdfBtn" onclick="exportMonthlyStatementPDF()" class="hidden w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm border border-white/15">
-                        <i class="fa-solid fa-file-pdf"></i> Download Complete Month PDF
+                    <button id="exportPdfBtn" onclick="exportMonthlyStatementPDF()" class="hidden w-full bg-[#32d74b] text-black font-semibold py-4 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-[17px]">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Export PDF Statement
                     </button>
-                    <button id="deleteMonthRecordBtn" onclick="deleteCurrentMonthRecord()" class="hidden w-full bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 border border-rose-500/30 font-semibold py-2.5 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-xs">
-                        <i class="fa-solid fa-trash-can"></i> Delete This Month Record
+                    <button id="deleteMonthRecordBtn" onclick="deleteCurrentMonthRecord()" class="hidden w-full bg-[#ff453a]/10 text-[#ff453a] font-semibold py-4 rounded-xl transition-all active:scale-[0.98] text-[17px]">
+                        Delete Record
                     </button>
                 </div>
             </section>
 
             <section id="view-admin" class="hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Admin Directory</h2>
-                    <button onclick="openCreatePropertyPrompt()" class="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm">
-                        <i class="fa-solid fa-plus mr-1"></i> Add Location
+                <div class="flex justify-between items-center mb-4 px-1">
+                    <h2 class="text-[22px] font-bold tracking-tight text-white">Admin Hub</h2>
+                    <button onclick="openCreatePropertyPrompt()" class="bg-[#0a84ff] text-white px-4 py-2 rounded-full text-[15px] font-semibold active:scale-95 transition">
+                        <i class="fa-solid fa-plus mr-1"></i> Add
                     </button>
                 </div>
 
-                <div id="adminPropertyList" class="space-y-4 mb-6"></div>
+                <div id="adminPropertyList" class="space-y-5 mb-8"></div>
 
-                <div class="backdrop-blur-md bg-white/[0.03] border border-white/5 rounded-2xl p-4">
-                    <div class="flex justify-between items-center text-xs">
-                        <span class="text-slate-400">Status: <strong id="userDisplayEmail" class="text-slate-200">Local Cache</strong></span>
-                        <button onclick="handleSignOut()" class="text-rose-400 hover:underline font-semibold">Sign Out / Lock</button>
+                <div class="bg-[#1c1c1e] rounded-[24px] p-5 flex justify-between items-center">
+                    <div>
+                        <p class="text-[13px] text-[#8e8e93] font-medium">Logged in as</p>
+                        <p id="userDisplayEmail" class="text-[15px] text-white font-semibold">Local Cache</p>
                     </div>
+                    <button onclick="handleSignOut()" class="bg-[#2c2c2e] text-[#ff453a] px-4 py-2 rounded-xl text-[15px] font-semibold active:scale-95 transition">
+                        Sign Out
+                    </button>
                 </div>
             </section>
 
         </main>
     </div>
 
+    <!-- Hidden PDF Template Container -->
     <div style="position: fixed; top: 0; left: 0; width: 750px; height: 0; overflow: hidden; z-index: -50; pointer-events: none;">
-        <div id="pdfPrintableTemplate" style="width: 750px; background-color: #ffffff; color: #111827; padding: 24px; box-sizing: border-box;"></div>
+        <div id="pdfPrintableTemplate" style="width: 750px; background-color: #ffffff; color: #000000; padding: 32px; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;"></div>
     </div>
 
     <script>
@@ -233,7 +242,7 @@
             }
 
             const syncDot = document.getElementById('syncIndicator');
-            if (syncDot) syncDot.classList.add('animate-ping');
+            if (syncDot) syncDot.classList.add('animate-pulse');
 
             if (isCloudMode && currentUser) {
                 if (syncCloudImmediate) {
@@ -243,7 +252,7 @@
                     cloudSyncTimeout = setTimeout(executeCloudSave, 400);
                 }
             } else {
-                if (syncDot) syncDot.classList.remove('animate-ping');
+                if (syncDot) syncDot.classList.remove('animate-pulse');
             }
         }
 
@@ -254,7 +263,7 @@
             } catch (err) {
                 console.warn("Background sync error:", err);
             } finally {
-                if (syncDot) syncDot.classList.remove('animate-ping');
+                if (syncDot) syncDot.classList.remove('animate-pulse');
             }
         }
 
@@ -363,7 +372,7 @@
         }
 
         function handleSignOut() {
-            if (confirm("Log out? You will need your login details again on this device.")) {
+            if (confirm("Log out?")) {
                 if (isCloudMode) {
                     auth.signOut();
                 } else {
@@ -385,7 +394,7 @@
 
         function formatMonthKey(monthKey) {
             const [y, m] = monthKey.split('-').map(Number);
-            return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
         }
 
         function generateRecentMonthsList() {
@@ -422,7 +431,7 @@
                 adminBtn.classList.add('hidden');
                 selectedPropId = payload.propId;
                 const prop = db.properties.find(p => p.id === selectedPropId);
-                headerSubText.innerText = prop ? prop.name : 'Property Months';
+                headerSubText.innerText = prop ? prop.name : 'History';
                 renderPropertyMonths();
             } else if (view === 'month-billing') {
                 document.getElementById('view-month-billing').classList.remove('hidden');
@@ -435,7 +444,7 @@
                 document.getElementById('view-admin').classList.remove('hidden');
                 backBtn.classList.remove('hidden');
                 adminBtn.classList.add('hidden');
-                headerSubText.innerText = 'Directory Settings';
+                headerSubText.innerText = 'Settings';
                 renderAdminProperties();
             }
             window.scrollTo(0, 0);
@@ -451,36 +460,42 @@
 
         function renderHomeProperties() {
             const container = document.getElementById('homePropertiesContainer');
-            document.getElementById('propCountBadge').innerText = `${db.properties.length} Locations`;
+            document.getElementById('propCountBadge').innerText = `${db.properties.length} Active`;
 
             if (db.properties.length === 0) {
                 container.innerHTML = `
-                    <div class="text-center py-12 backdrop-blur-md bg-white/[0.04] rounded-2xl border border-dashed border-white/10">
-                        <i class="fa-solid fa-map-location-dot text-3xl text-slate-500 mb-2"></i>
-                        <p class="text-xs text-slate-400">No properties registered.</p>
-                        <button onclick="navigateTo('admin')" class="mt-3 text-cyan-400 font-bold text-xs hover:underline">Setup in Admin</button>
+                    <div class="text-center py-16 bg-[#1c1c1e] rounded-[24px]">
+                        <p class="text-[15px] text-[#8e8e93]">No properties found.</p>
+                        <button onclick="navigateTo('admin')" class="mt-4 text-[#0a84ff] font-semibold text-[15px]">Add Property</button>
                     </div>`;
                 return;
             }
 
-            container.innerHTML = db.properties.map(p => `
+            container.innerHTML = db.properties.map(p => {
+                const sortedKeys = Object.keys(p.history || {}).sort();
+                let subtitleHtml = `<span class="text-[#8e8e93]">No past collections</span>`;
+                
+                if (sortedKeys.length > 0) {
+                    const lastKey = sortedKeys[sortedKeys.length - 1];
+                    const lastRecord = p.history[lastKey];
+                    subtitleHtml = `Last Total: <span class="text-white font-medium">₹${lastRecord.summary.grandTotal}</span> <span class="text-[#8e8e93] text-[13px] ml-1">(${formatMonthKey(lastKey)})</span>`;
+                }
+
+                return `
                 <div onclick="navigateTo('property-months', { propId: '${p.id}' })" 
-                     class="backdrop-blur-md bg-white/[0.05] hover:bg-white/[0.09] p-4 rounded-2xl border border-white/10 shadow-lg transition-all cursor-pointer flex justify-between items-center group active:scale-[0.99]">
+                     class="bg-[#1c1c1e] hover:bg-[#2c2c2e] p-5 rounded-[24px] mb-3 transition cursor-pointer flex justify-between items-center active:scale-[0.98]">
                     <div>
-                        <h3 class="font-bold text-base text-white group-hover:text-cyan-300 transition">${p.name}</h3>
-                        <p class="text-xs text-slate-400 mt-1 flex flex-wrap items-center gap-2">
-                            <span><i class="fa-solid fa-door-closed text-slate-400 mr-1"></i>${p.rooms.length} Units</span>
-                            <span class="text-slate-600">•</span>
-                            <span>₹${p.unitRate}/unit</span>
-                            <span class="text-slate-600">•</span>
-                            <span>Common: ${p.commonBaseReading || 0}</span>
+                        <h3 class="font-bold text-[19px] text-white tracking-tight mb-1">${p.name}</h3>
+                        <p class="text-[15px] text-[#8e8e93]">
+                            ${subtitleHtml}
                         </p>
                     </div>
-                    <div class="w-8 h-8 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-center text-slate-300 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-all">
-                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    <div class="text-[#38383a]">
+                        <i class="fa-solid fa-chevron-right text-lg"></i>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function renderPropertyMonths() {
@@ -490,7 +505,6 @@
             document.getElementById('propDetailsName').innerText = prop.name;
             document.getElementById('propDetailsRate').innerText = prop.unitRate;
             document.getElementById('propDetailsRooms').innerText = prop.rooms.length;
-            document.getElementById('propDetailsCommonMeter').innerText = prop.commonBaseReading || 0;
 
             const months = generateRecentMonthsList();
             const container = document.getElementById('monthsListContainer');
@@ -500,48 +514,34 @@
                 const record = prop.history && prop.history[mKey];
                 const isCreated = !!record;
 
-                let tenantBreakdownHTML = '';
-                let statusBadgeHTML = '';
+                let rightSideHtml = '';
 
                 if (isCreated) {
-                    statusBadgeHTML = `
-                        <div class="flex items-center gap-2">
-                            <span class="bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full">Calculated</span>
-                            <button onclick="event.stopPropagation(); deleteMonthRecordByKey('${mKey}')" class="text-rose-400 hover:text-rose-300 p-1" title="Delete record">
-                                <i class="fa-solid fa-trash-can text-xs"></i>
-                            </button>
-                        </div>
-                    `;
-                    tenantBreakdownHTML = `
-                        <div class="mt-3 pt-2.5 border-t border-white/10 space-y-1.5">
-                            ${record.roomsData.map(r => `
-                                <div class="flex justify-between items-center text-xs">
-                                    <span class="text-slate-400 font-medium">${r.tenant} <span class="text-slate-500">(Rm ${r.name})</span></span>
-                                    <span class="font-semibold text-slate-200">₹${r.totalBill}</span>
-                                </div>
-                            `).join('')}
-                            <div class="flex justify-between items-center text-xs font-bold text-cyan-300 pt-1.5 border-t border-dashed border-white/10">
-                                <span>Total Collection</span>
-                                <span class="text-sm">₹${record.summary.grandTotal}</span>
-                            </div>
+                    rightSideHtml = `
+                        <div class="text-right">
+                            <p class="text-[17px] font-semibold text-white">₹${record.summary.grandTotal}</p>
+                            <p class="text-[13px] text-[#32d74b] font-medium">Saved</p>
                         </div>
                     `;
                 } else {
-                    statusBadgeHTML = `<span class="bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full">Not Created</span>`;
-                    tenantBreakdownHTML = `<p class="text-xs text-slate-500 italic mt-2">No records generated for this cycle.</p>`;
+                    rightSideHtml = `
+                        <div class="text-right">
+                            <p class="text-[15px] text-[#8e8e93]">Pending</p>
+                        </div>
+                    `;
                 }
 
                 return `
                     <div onclick="navigateTo('month-billing', { monthKey: '${mKey}' })" 
-                         class="backdrop-blur-md bg-white/[0.05] hover:bg-white/[0.08] p-4 rounded-2xl border ${isCurrentMonth ? 'border-cyan-500/50 shadow-[0_0_16px_rgba(6,182,212,0.15)]' : 'border-white/10'} shadow-lg transition-all cursor-pointer active:scale-[0.99]">
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center gap-2">
-                                <h4 class="font-bold text-sm text-white">${formatMonthKey(mKey)}</h4>
-                                ${isCurrentMonth ? '<span class="bg-cyan-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-md shadow-sm">CURRENT</span>' : ''}
-                            </div>
-                            ${statusBadgeHTML}
+                         class="p-5 flex justify-between items-center bg-[#1c1c1e] hover:bg-[#2c2c2e] transition cursor-pointer active:bg-[#38383a]">
+                        <div class="flex items-center gap-3">
+                            <h4 class="font-semibold text-[17px] text-white">${formatMonthKey(mKey)}</h4>
+                            ${isCurrentMonth ? '<span class="bg-[#0a84ff] text-white text-[11px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide">Current</span>' : ''}
                         </div>
-                        ${tenantBreakdownHTML}
+                        <div class="flex items-center gap-3">
+                            ${rightSideHtml}
+                            <i class="fa-solid fa-chevron-right text-[#38383a]"></i>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -552,7 +552,7 @@
             if (!prop) return;
 
             document.getElementById('billingMonthTitle').innerText = formatMonthKey(selectedMonthKey);
-            document.getElementById('billingLocationSubtitle').innerText = `${prop.name} (₹${prop.unitRate}/unit)`;
+            document.getElementById('billingLocationSubtitle').innerText = `${prop.name} — ₹${prop.unitRate}/unit`;
 
             const record = prop.history ? prop.history[selectedMonthKey] : null;
             
@@ -572,21 +572,21 @@
             const saveBtnText = document.getElementById('saveBtnText');
 
             if (record) {
-                statusBadge.className = "text-xs px-2.5 py-1 rounded-full font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300";
+                statusBadge.className = "text-[13px] px-3 py-1 rounded-full font-semibold bg-[#32d74b]/10 text-[#32d74b]";
                 statusBadge.innerText = "Saved";
                 exportPdfBtn.classList.remove('hidden');
                 deleteBtn.classList.remove('hidden');
-                saveBtnText.innerText = "Update Record";
+                saveBtnText.innerText = "Update Calculations";
 
                 document.getElementById('inputCommonPrev').value = record.commonPrev;
                 document.getElementById('inputCommonCurr').value = record.commonCurr;
                 document.getElementById('inputCommonExpense').value = record.commonExpense;
             } else {
-                statusBadge.className = "text-xs px-2.5 py-1 rounded-full font-bold bg-amber-500/15 border border-amber-500/30 text-amber-300";
+                statusBadge.className = "text-[13px] px-3 py-1 rounded-full font-semibold bg-[#ffcc00]/10 text-[#ffcc00]";
                 statusBadge.innerText = "Draft";
                 exportPdfBtn.classList.add('hidden');
                 deleteBtn.classList.add('hidden');
-                saveBtnText.innerText = "Save Details";
+                saveBtnText.innerText = "Save Calculations";
 
                 document.getElementById('inputCommonPrev').value = lastRecord ? lastRecord.commonCurr : (prop.commonBaseReading || 0);
                 document.getElementById('inputCommonCurr').value = '';
@@ -596,7 +596,7 @@
             const roomsContainer = document.getElementById('billingRoomsContainer');
             if (prop.rooms.length === 0) {
                 roomsContainer.innerHTML = `
-                    <div class="text-xs bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 p-3.5 rounded-xl">
+                    <div class="text-[15px] bg-[#1c1c1e] text-[#8e8e93] p-5 rounded-[24px] text-center">
                         No rooms configured for this location. Add rooms in Admin first.
                     </div>`;
                 return;
@@ -615,34 +615,34 @@
                 const extraVal = savedRoomData ? savedRoomData.extra : '';
 
                 return `
-                    <div class="backdrop-blur-md bg-white/[0.05] p-4 rounded-2xl border border-white/10 shadow-lg" data-room-id="${room.id}">
-                        <div class="flex justify-between items-center border-b border-white/10 pb-2 mb-3">
+                    <div class="bg-[#1c1c1e] p-5 rounded-[24px]" data-room-id="${room.id}">
+                        <div class="flex justify-between items-center mb-4">
                             <div>
-                                <span class="font-bold text-sm text-white">Room ${room.name}</span>
-                                <span class="text-xs text-slate-400 ml-1">(${room.tenant})</span>
+                                <span class="font-semibold text-[17px] text-white">Room ${room.name}</span>
+                                <span class="text-[13px] text-[#8e8e93] block">${room.tenant}</span>
                             </div>
-                            <span class="text-xs font-semibold text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">Base: ₹${room.rent}</span>
+                            <span class="text-[13px] font-medium text-white bg-[#2c2c2e] px-3 py-1.5 rounded-lg">Base: ₹${room.rent}</span>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2.5 mb-2.5">
+                        <div class="grid grid-cols-2 gap-3 mb-3">
                             <div>
-                                <label class="block text-[10px] text-slate-400 mb-1">Prev Reading</label>
-                                <input type="number" id="prev_${room.id}" value="${prevReadingVal}" class="w-full p-2 rounded-xl bg-slate-900/60 border border-white/10 text-slate-300 text-xs outline-none">
+                                <label class="block text-[13px] text-[#8e8e93] mb-1.5 font-medium">Prev Reading</label>
+                                <input type="number" id="prev_${room.id}" value="${prevReadingVal}" class="w-full p-3 rounded-xl bg-[#2c2c2e] text-white text-[15px] outline-none">
                             </div>
                             <div>
-                                <label class="block text-[10px] text-cyan-300 font-bold mb-1">Curr Reading</label>
-                                <input type="number" id="curr_${room.id}" value="${currReadingVal}" placeholder="0" class="w-full p-2 rounded-xl bg-cyan-950/30 border border-cyan-500/30 text-cyan-200 text-xs focus:border-cyan-400 outline-none">
+                                <label class="block text-[13px] text-[#0a84ff] mb-1.5 font-medium">Curr Reading</label>
+                                <input type="number" id="curr_${room.id}" value="${currReadingVal}" placeholder="0" class="w-full p-3 rounded-xl bg-[#2c2c2e] border border-[#0a84ff]/30 text-white text-[15px] outline-none focus:ring-2 focus:ring-[#0a84ff]">
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2.5">
+                        <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-[10px] text-rose-400 font-semibold mb-1">Previous Dues (₹)</label>
-                                <input type="number" id="dues_${room.id}" value="${duesVal}" class="w-full p-2 rounded-xl border border-rose-500/30 text-rose-300 text-xs bg-rose-950/20 outline-none">
+                                <label class="block text-[13px] text-[#ff453a] mb-1.5 font-medium">Prev Dues (₹)</label>
+                                <input type="number" id="dues_${room.id}" value="${duesVal}" class="w-full p-3 rounded-xl bg-[#2c2c2e] text-white text-[15px] outline-none focus:ring-2 focus:ring-[#0a84ff]">
                             </div>
                             <div>
-                                <label class="block text-[10px] text-slate-400 mb-1">Extra Charges (₹)</label>
-                                <input type="number" id="extra_${room.id}" value="${extraVal}" placeholder="0" class="w-full p-2 rounded-xl bg-slate-900/60 border border-white/10 text-white text-xs focus:border-cyan-400 outline-none">
+                                <label class="block text-[13px] text-[#8e8e93] mb-1.5 font-medium">Extra Chg (₹)</label>
+                                <input type="number" id="extra_${room.id}" value="${extraVal}" placeholder="0" class="w-full p-3 rounded-xl bg-[#2c2c2e] text-white text-[15px] outline-none focus:ring-2 focus:ring-[#0a84ff]">
                             </div>
                         </div>
                     </div>
@@ -656,7 +656,7 @@
 
             const saveBtn = document.getElementById('saveBtn');
             const originalText = saveBtn.innerHTML;
-            saveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Saving...`;
+            saveBtn.innerHTML = `Saving...`;
 
             const unitRate = prop.unitRate;
             const commonPrev = parseFloat(document.getElementById('inputCommonPrev').value) || 0;
@@ -732,16 +732,6 @@
             }
         }
 
-        function deleteMonthRecordByKey(mKey) {
-            if (!confirm(`Delete calculation record for ${formatMonthKey(mKey)}?`)) return;
-            const prop = db.properties.find(p => p.id === selectedPropId);
-            if (prop && prop.history && prop.history[mKey]) {
-                delete prop.history[mKey];
-                saveStore(true);
-                renderPropertyMonths();
-            }
-        }
-
         async function exportMonthlyStatementPDF() {
             const prop = db.properties.find(p => p.id === selectedPropId);
             const record = prop?.history?.[selectedMonthKey];
@@ -753,88 +743,88 @@
 
             const exportBtn = document.getElementById('exportPdfBtn');
             const originalBtnHTML = exportBtn.innerHTML;
-            exportBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Generating PDF...`;
+            exportBtn.innerHTML = `Generating PDF...`;
             exportBtn.disabled = true;
 
             const printContainer = document.getElementById('pdfPrintableTemplate');
             
             printContainer.innerHTML = `
-                <div style="font-family: Arial, Helvetica, sans-serif; color: #111827; background: #ffffff; width: 702px; box-sizing: border-box; margin: 0 auto;">
-                    <div style="border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-end;">
+                <div style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; color: #000000; background: #ffffff; width: 702px; box-sizing: border-box; margin: 0 auto;">
+                    <div style="border-bottom: 2px solid #000000; padding-bottom: 12px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end;">
                         <div>
-                            <h1 style="font-size: 22px; font-weight: bold; margin: 0; color: #1e3a8a;">${prop.name}</h1>
-                            <p style="font-size: 12px; color: #4b5563; margin: 3px 0 0 0;">Monthly Rent & Utility Statement</p>
+                            <h1 style="font-size: 28px; font-weight: 700; margin: 0; color: #000000; letter-spacing: -0.5px;">${prop.name}</h1>
+                            <p style="font-size: 14px; color: #666666; margin: 4px 0 0 0;">Rent & Utility Statement</p>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-size: 15px; font-weight: bold; color: #2563eb;">${formatMonthKey(record.monthKey)}</div>
-                            <div style="font-size: 10px; color: #6b7280; margin-top: 2px;">Generated: ${new Date().toLocaleDateString('en-GB')}</div>
+                            <div style="font-size: 18px; font-weight: 600; color: #000000;">${formatMonthKey(record.monthKey)}</div>
+                            <div style="font-size: 12px; color: #888888; margin-top: 4px;">Issued: ${new Date().toLocaleDateString('en-GB')}</div>
                         </div>
                     </div>
 
-                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px;">
-                        <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #334155; margin-bottom: 6px; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px;">Common Area Utilities</div>
-                        <table style="width: 100%; font-size: 10px; border-collapse: collapse;">
+                    <div style="background-color: #f5f5f7; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+                        <div style="font-size: 13px; text-transform: uppercase; font-weight: 600; color: #666666; margin-bottom: 8px; border-bottom: 1px solid #d2d2d7; padding-bottom: 6px;">Common Area Breakdown</div>
+                        <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
                             <tr>
-                                <td style="width: 25%; color: #64748b;">Common Usage:</td>
-                                <td style="width: 25%; font-weight: bold;">${record.commonUnits} units (${record.commonPrev} &rarr; ${record.commonCurr})</td>
-                                <td style="width: 25%; color: #64748b;">Power Cost (@ ₹${prop.unitRate}):</td>
-                                <td style="width: 25%; font-weight: bold;">₹${record.commonElecCost.toFixed(2)}</td>
+                                <td style="width: 25%; color: #666666;">Common Usage:</td>
+                                <td style="width: 25%; font-weight: 600;">${record.commonUnits} units</td>
+                                <td style="width: 25%; color: #666666;">Power Cost (@ ₹${prop.unitRate}):</td>
+                                <td style="width: 25%; font-weight: 600;">₹${record.commonElecCost.toFixed(2)}</td>
                             </tr>
                             <tr>
-                                <td style="color: #64748b; padding-top: 4px;">Other Common Exp:</td>
-                                <td style="font-weight: bold; padding-top: 4px;">₹${record.commonExpense.toFixed(2)}</td>
-                                <td style="color: #64748b; padding-top: 4px;">Per-Unit Overhead:</td>
-                                <td style="font-weight: bold; padding-top: 4px;">₹${((record.commonElecCost + record.commonExpense) / record.summary.totalRooms).toFixed(2)}</td>
+                                <td style="color: #666666; padding-top: 8px;">Other Expenses:</td>
+                                <td style="font-weight: 600; padding-top: 8px;">₹${record.commonExpense.toFixed(2)}</td>
+                                <td style="color: #666666; padding-top: 8px;">Per-Unit Share:</td>
+                                <td style="font-weight: 600; padding-top: 8px;">₹${((record.commonElecCost + record.commonExpense) / record.summary.totalRooms).toFixed(2)}</td>
                             </tr>
                         </table>
                     </div>
 
-                    <table style="width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 10px; text-align: left; margin-bottom: 18px;">
+                    <table style="width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 11px; text-align: left; margin-bottom: 24px;">
                         <thead>
-                            <tr style="background-color: #2563eb; color: #ffffff;">
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; width: 8%;">Unit</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; width: 17%;">Tenant</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 11%;">Base Rent</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 9%;">Prev Rd</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 9%;">Curr Rd</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 8%;">Units</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 11%;">Power</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 10%;">Common</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 8%;">Dues</th>
-                                <th style="padding: 6px 4px; border: 1px solid #1d4ed8; text-align: right; width: 9%; background-color: #1e40af;">Total (₹)</th>
+                            <tr style="border-bottom: 2px solid #000000; color: #000000;">
+                                <th style="padding: 10px 4px; width: 8%;">Unit</th>
+                                <th style="padding: 10px 4px; width: 17%;">Tenant</th>
+                                <th style="padding: 10px 4px; text-align: right; width: 11%;">Base Rent</th>
+                                <th style="padding: 10px 4px; text-align: right; width: 9%;">Prev Rd</th>
+                                <th style="padding: 10px 4px; text-align: right; width: 9%;">Curr Rd</th>
+                                <th style="padding: 10px 4px; text-align: right; width: 8%;">Units</th>
+                                <th style="padding: 10px 4px; text-align: right; width: 11%;">Power</th>
+                                <th style="padding: 10px 4px; text-align: right; width: 10%;">Common</th>
+                                <th style="padding: 10px 4px; text-align: right; width: 8%;">Dues</th>
+                                <th style="padding: 10px 4px; text-align: right; width: 9%; font-weight: 700;">Total (₹)</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${record.roomsData.map((r, i) => `
-                                <tr style="background-color: ${i % 2 === 0 ? '#ffffff' : '#f9fafb'};">
-                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.name}</td>
-                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.tenant}</td>
-                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right;">₹${r.rent}</td>
-                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right; color: #4b5563;">${r.prevReading}</td>
-                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">${r.currReading}</td>
-                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right;">${r.consumedUnits}</td>
-                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right;">₹${r.elecBill.toFixed(2)}</td>
-                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right;">₹${(r.commonElecShare + r.commonExpShare).toFixed(2)}</td>
-                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right; color: ${(r.extra + r.dues) > 0 ? '#b91c1c' : '#374151'};">₹${(r.extra + r.dues).toFixed(2)}</td>
-                                    <td style="padding: 6px 4px; border: 1px solid #e5e7eb; text-align: right; font-weight: bold; background-color: #f0fdf4; color: #166534;">₹${r.totalBill}</td>
+                                <tr style="border-bottom: 1px solid #e5e5ea;">
+                                    <td style="padding: 12px 4px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.name}</td>
+                                    <td style="padding: 12px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${r.tenant}</td>
+                                    <td style="padding: 12px 4px; text-align: right;">₹${r.rent}</td>
+                                    <td style="padding: 12px 4px; text-align: right; color: #666666;">${r.prevReading}</td>
+                                    <td style="padding: 12px 4px; text-align: right; font-weight: 500;">${r.currReading}</td>
+                                    <td style="padding: 12px 4px; text-align: right;">${r.consumedUnits}</td>
+                                    <td style="padding: 12px 4px; text-align: right;">₹${r.elecBill.toFixed(2)}</td>
+                                    <td style="padding: 12px 4px; text-align: right;">₹${(r.commonElecShare + r.commonExpShare).toFixed(2)}</td>
+                                    <td style="padding: 12px 4px; text-align: right; color: ${(r.extra + r.dues) > 0 ? '#ff3b30' : '#000000'};">₹${(r.extra + r.dues).toFixed(2)}</td>
+                                    <td style="padding: 12px 4px; text-align: right; font-weight: 700; font-size: 12px;">₹${r.totalBill}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
                         <tfoot>
-                            <tr style="background-color: #f1f5f9; font-weight: bold;">
-                                <td colspan="9" style="padding: 8px 6px; border: 1px solid #cbd5e1; text-align: right; font-size: 11px;">Total Month Collection:</td>
-                                <td style="padding: 8px 6px; border: 1px solid #cbd5e1; text-align: right; font-size: 12px; color: #1e3a8a;">₹${record.summary.grandTotal}</td>
+                            <tr>
+                                <td colspan="9" style="padding: 16px 6px; text-align: right; font-size: 14px; font-weight: 600;">Total Collection:</td>
+                                <td style="padding: 16px 6px; text-align: right; font-size: 16px; font-weight: 700;">₹${record.summary.grandTotal}</td>
                             </tr>
                         </tfoot>
                     </table>
 
-                    <div style="font-size: 9px; color: #9ca3af; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 8px;">
-                        Generated via Universal Rent & Property Manager
+                    <div style="font-size: 10px; color: #999999; text-align: center; border-top: 1px solid #e5e5ea; padding-top: 12px;">
+                        Automated statement generated by Universal Rent Manager
                     </div>
                 </div>
             `;
 
-            await new Promise(resolve => setTimeout(resolve, 80));
+            await new Promise(resolve => setTimeout(resolve, 150));
 
             const opt = {
                 margin: [0.25, 0.25, 0.25, 0.25],
@@ -855,7 +845,7 @@
                 await html2pdf().set(opt).from(printContainer).save();
             } catch (err) {
                 console.error("PDF generation failed:", err);
-                alert("Failed to create PDF. Please try again.");
+                alert("Failed to create PDF.");
             } finally {
                 exportBtn.innerHTML = originalBtnHTML;
                 exportBtn.disabled = false;
@@ -890,75 +880,73 @@
         function renderAdminProperties() {
             const container = document.getElementById('adminPropertyList');
             if (db.properties.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No locations found. Add your first property above.</p>`;
+                container.innerHTML = `<div class="bg-[#1c1c1e] p-6 rounded-[24px] text-center text-[#8e8e93] text-[15px]">No properties added yet.</div>`;
                 return;
             }
 
             container.innerHTML = db.properties.map(p => `
-                <div class="backdrop-blur-md bg-white/[0.05] border border-white/10 rounded-2xl p-4 shadow-lg mb-4">
-                    <div class="flex justify-between items-start mb-3 border-b border-white/10 pb-2">
-                        <div class="space-y-2 flex-1 mr-2">
+                <div class="bg-[#1c1c1e] rounded-[24px] p-5 shadow-sm">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="space-y-3 flex-1 mr-4">
                             <div>
-                                <label class="block text-[10px] text-slate-400 mb-0.5 font-semibold">Location Name</label>
-                                <input type="text" value="${p.name}" oninput="updatePropField('${p.id}', 'name', this.value)" class="w-full p-2 rounded-xl bg-slate-900/60 border border-white/10 text-white text-xs outline-none focus:border-cyan-400 font-bold">
+                                <label class="block text-[13px] text-[#8e8e93] mb-1 font-medium">Location Name</label>
+                                <input type="text" value="${p.name}" oninput="updatePropField('${p.id}', 'name', this.value)" class="w-full p-3 rounded-xl bg-[#2c2c2e] text-white text-[15px] font-semibold outline-none focus:ring-2 focus:ring-[#0a84ff]">
                             </div>
-                            <div class="grid grid-cols-2 gap-2">
+                            <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-[10px] text-slate-400 mb-0.5">Unit Rate (₹)</label>
-                                    <input type="number" step="any" value="${p.unitRate}" oninput="updatePropField('${p.id}', 'unitRate', this.value)" class="w-full p-2 rounded-xl bg-slate-900/60 border border-white/10 text-white text-xs outline-none focus:border-cyan-400">
+                                    <label class="block text-[13px] text-[#8e8e93] mb-1 font-medium">Rate (₹)</label>
+                                    <input type="number" step="any" value="${p.unitRate}" oninput="updatePropField('${p.id}', 'unitRate', this.value)" class="w-full p-3 rounded-xl bg-[#2c2c2e] text-white text-[15px] outline-none focus:ring-2 focus:ring-[#0a84ff]">
                                 </div>
                                 <div>
-                                    <label class="block text-[10px] text-slate-400 mb-0.5">Common Meter Base</label>
-                                    <input type="number" step="any" value="${p.commonBaseReading || 0}" oninput="updatePropField('${p.id}', 'commonBaseReading', this.value)" class="w-full p-2 rounded-xl bg-slate-900/60 border border-white/10 text-white text-xs outline-none focus:border-cyan-400">
+                                    <label class="block text-[13px] text-[#8e8e93] mb-1 font-medium">Common Base</label>
+                                    <input type="number" step="any" value="${p.commonBaseReading || 0}" oninput="updatePropField('${p.id}', 'commonBaseReading', this.value)" class="w-full p-3 rounded-xl bg-[#2c2c2e] text-white text-[15px] outline-none focus:ring-2 focus:ring-[#0a84ff]">
                                 </div>
                             </div>
                         </div>
-                        <div class="flex flex-col gap-1">
-                            <button onclick="deleteProperty('${p.id}')" class="text-rose-400 hover:bg-rose-500/10 p-2 rounded-lg transition" title="Delete Property">
-                                <i class="fa-solid fa-trash text-xs"></i>
-                            </button>
-                        </div>
+                        <button onclick="deleteProperty('${p.id}')" class="bg-[#ff453a]/10 text-[#ff453a] p-3 rounded-xl transition" title="Delete Property">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
                     </div>
 
-                    <div class="space-y-2.5 mb-3">
-                        <div class="flex justify-between items-center text-xs font-bold text-slate-400">
-                            <span>Rooms / Tenants</span>
-                            <button onclick="openAddRoomPrompt('${p.id}')" class="text-cyan-400 hover:underline flex items-center gap-1"><i class="fa-solid fa-plus text-[10px]"></i> Add Room</button>
+                    <div class="space-y-3 mb-5 border-t border-[#38383a] pt-4 mt-2">
+                        <div class="flex justify-between items-center text-[13px] font-semibold text-[#8e8e93] uppercase tracking-wide">
+                            <span>Units Config</span>
+                            <button onclick="openAddRoomPrompt('${p.id}')" class="text-[#0a84ff] flex items-center gap-1 active:opacity-60"><i class="fa-solid fa-plus text-[11px]"></i> Add Room</button>
                         </div>
 
-                        ${p.rooms.length === 0 ? '<p class="text-[11px] text-slate-500 italic">No rooms registered.</p>' : ''}
+                        ${p.rooms.length === 0 ? '<p class="text-[13px] text-[#8e8e93]">No rooms added.</p>' : ''}
 
                         ${p.rooms.map(r => `
-                            <div class="bg-slate-900/50 p-3 rounded-xl border border-white/5 space-y-2">
-                                <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-[#2c2c2e] p-4 rounded-xl space-y-3">
+                                <div class="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label class="block text-[9px] text-slate-400 mb-0.5">Room No.</label>
-                                        <input type="text" value="${r.name}" oninput="updateRoomField('${p.id}', '${r.id}', 'name', this.value)" class="w-full p-1.5 rounded-lg bg-slate-950 border border-white/10 text-white text-xs outline-none">
+                                        <label class="block text-[12px] text-[#8e8e93] mb-1">Room No.</label>
+                                        <input type="text" value="${r.name}" oninput="updateRoomField('${p.id}', '${r.id}', 'name', this.value)" class="w-full p-2.5 rounded-lg bg-[#1c1c1e] text-white text-[14px] outline-none">
                                     </div>
                                     <div>
-                                        <label class="block text-[9px] text-slate-400 mb-0.5">Tenant Name</label>
-                                        <input type="text" value="${r.tenant}" oninput="updateRoomField('${p.id}', '${r.id}', 'tenant', this.value)" class="w-full p-1.5 rounded-lg bg-slate-950 border border-white/10 text-white text-xs outline-none">
+                                        <label class="block text-[12px] text-[#8e8e93] mb-1">Tenant Name</label>
+                                        <input type="text" value="${r.tenant}" oninput="updateRoomField('${p.id}', '${r.id}', 'tenant', this.value)" class="w-full p-2.5 rounded-lg bg-[#1c1c1e] text-white text-[14px] outline-none">
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-3 gap-2">
+                                <div class="grid grid-cols-3 gap-3">
                                     <div>
-                                        <label class="block text-[9px] text-slate-400 mb-0.5">Rent (₹)</label>
-                                        <input type="number" step="any" value="${r.rent}" oninput="updateRoomField('${p.id}', '${r.id}', 'rent', this.value)" class="w-full p-1.5 rounded-lg bg-slate-950 border border-white/10 text-white text-xs outline-none">
+                                        <label class="block text-[12px] text-[#8e8e93] mb-1">Base Rent (₹)</label>
+                                        <input type="number" step="any" value="${r.rent}" oninput="updateRoomField('${p.id}', '${r.id}', 'rent', this.value)" class="w-full p-2.5 rounded-lg bg-[#1c1c1e] text-white text-[14px] outline-none">
                                     </div>
                                     <div>
-                                        <label class="block text-[9px] text-slate-400 mb-0.5">Last Meter</label>
-                                        <input type="number" step="any" value="${r.lastReading}" oninput="updateRoomField('${p.id}', '${r.id}', 'lastReading', this.value)" class="w-full p-1.5 rounded-lg bg-slate-950 border border-white/10 text-white text-xs outline-none">
+                                        <label class="block text-[12px] text-[#8e8e93] mb-1">Start Meter</label>
+                                        <input type="number" step="any" value="${r.lastReading}" oninput="updateRoomField('${p.id}', '${r.id}', 'lastReading', this.value)" class="w-full p-2.5 rounded-lg bg-[#1c1c1e] text-white text-[14px] outline-none">
                                     </div>
                                     <div class="flex items-end justify-end">
-                                        <button onclick="deleteRoom('${p.id}', '${r.id}')" class="text-rose-400 hover:bg-rose-500/10 p-1.5 rounded-lg text-xs" title="Remove Room"><i class="fa-solid fa-trash-can"></i></button>
+                                        <button onclick="deleteRoom('${p.id}', '${r.id}')" class="text-[#ff453a] bg-[#ff453a]/10 p-2.5 rounded-lg text-[14px] w-full"><i class="fa-solid fa-trash-can"></i></button>
                                     </div>
                                 </div>
                             </div>
                         `).join('')}
                     </div>
 
-                    <button onclick="saveLocationComplete('${p.id}')" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold py-2.5 rounded-xl shadow transition text-xs flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-check"></i> Save & Finish Changes
+                    <button onclick="saveLocationComplete('${p.id}')" class="w-full bg-[#0a84ff] text-white font-semibold py-3.5 rounded-xl transition text-[17px] active:scale-[0.98]">
+                        Save Admin Changes
                     </button>
                 </div>
             `).join('');
@@ -966,7 +954,7 @@
 
         function saveLocationComplete(propId) {
             saveStore(true);
-            alert("All changes saved successfully!");
+            alert("Settings saved successfully");
         }
 
         function openCreatePropertyPrompt() {
@@ -988,7 +976,7 @@
         }
 
         function deleteProperty(propId) {
-            if (!confirm("Delete this property and all its history?")) return;
+            if (!confirm("Are you sure you want to delete this property and all history?")) return;
             db.properties = db.properties.filter(p => p.id !== propId);
             saveStore(true);
             renderAdminProperties();
