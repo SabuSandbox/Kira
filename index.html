@@ -151,7 +151,7 @@
                 </div>
 
                 <div class="px-1 mb-2 flex justify-between items-center">
-                    <h3 class="text-[13px] font-semibold uppercase text-[#8e8e93] tracking-wide">Tenant Units</h3>
+                    <h3 class="text-[13px] font-semibold uppercase text-[#8e8e93] tracking-wide">Units</h3>
                 </div>
                 
                 <div id="billingRoomsContainer" class="space-y-4 mb-8"></div>
@@ -226,9 +226,7 @@
                     unitRate: 8.5,
                     commonBaseReading: 1200,
                     rooms: [
-                        { id: 'room_101', name: '101', tenant: 'Rahul Sharma', rent: 8000, defaultDues: 0, lastReading: 450, isExempt: false },
-                        { id: 'room_102', name: '102', tenant: 'Priya Verma', rent: 9000, defaultDues: 0, lastReading: 780, isExempt: false }
-                    ],
+                        ],
                     history: {}
                 }
             ]
@@ -656,7 +654,7 @@
                         
                         <div class="flex items-center gap-2 pt-4 mt-3 border-t border-[#38383a]">
                             <input type="checkbox" id="exempt_${room.id}" ${isExempt ? 'checked' : ''} class="accent-[#0a84ff] w-4 h-4 cursor-pointer">
-                            <label for="exempt_${room.id}" class="text-[13px] text-[#8e8e93] font-medium cursor-pointer select-none">Exempt tenant from common utilities</label>
+                            <label for="exempt_${room.id}" class="text-[13px] text-[#8e8e93] font-medium cursor-pointer select-none">Exempt from common utilities</label>
                         </div>
                     </div>
                 `;
@@ -817,7 +815,7 @@
                         <thead>
                             <tr style="border-bottom: 2px solid #000000; color: #000000;">
                                 <th style="padding: 10px 4px; width: 7%;">Unit</th>
-                                <th style="padding: 10px 4px; width: 14%;">Tenant</th>
+                                <th style="padding: 10px 4px; width: 14%;">Name</th>
                                 <th style="padding: 10px 4px; text-align: right; width: 10%;">Base Rent</th>
                                 <th style="padding: 10px 4px; text-align: right; width: 8%;">Curr Rd</th>
                                 <th style="padding: 10px 4px; text-align: right; width: 8%;">Prev Rd</th>
@@ -855,11 +853,11 @@
                     </table>
 
                     <div style="margin-top: 32px; page-break-inside: avoid; width: 60%;">
-                        <div style="font-size: 13px; text-transform: uppercase; font-weight: 600; color: #666666; margin-bottom: 8px; border-bottom: 1px solid #d2d2d7; padding-bottom: 6px;">Tenant Summary</div>
+                        <div style="font-size: 13px; text-transform: uppercase; font-weight: 600; color: #666666; margin-bottom: 8px; border-bottom: 1px solid #d2d2d7; padding-bottom: 6px;">Summary</div>
                         <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
                             <thead>
                                 <tr style="border-bottom: 2px solid #000000; color: #000000;">
-                                    <th style="padding: 8px 4px; width: 70%;">Tenant Name</th>
+                                    <th style="padding: 8px 4px; width: 70%;">Name</th>
                                     <th style="padding: 8px 4px; text-align: right; width: 30%;">Total Amount</th>
                                 </tr>
                             </thead>
@@ -984,7 +982,7 @@
                                         <input type="text" value="${r.name}" oninput="updateRoomField('${p.id}', '${r.id}', 'name', this.value)" class="w-full p-2.5 rounded-lg bg-[#1c1c1e] text-white text-[14px] outline-none">
                                     </div>
                                     <div>
-                                        <label class="block text-[12px] text-[#8e8e93] mb-1">Tenant Name</label>
+                                        <label class="block text-[12px] text-[#8e8e93] mb-1">Name</label>
                                         <input type="text" value="${r.tenant}" oninput="updateRoomField('${p.id}', '${r.id}', 'tenant', this.value)" class="w-full p-2.5 rounded-lg bg-[#1c1c1e] text-white text-[14px] outline-none">
                                     </div>
                                 </div>
