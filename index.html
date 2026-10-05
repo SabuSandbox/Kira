@@ -226,8 +226,8 @@
                     unitRate: 8.5,
                     commonBaseReading: 1200,
                     rooms: [
-                        { id: 'room_101', name: '101', tenant: 'Rahul Sharma', rent: 8000, defaultDues: 0, lastReading: 450 },
-                        { id: 'room_102', name: '102', tenant: 'Priya Verma', rent: 9000, defaultDues: 0, lastReading: 780 }
+                        { id: 'room_101', name: '101', tenant: 'Rahul Sharma', rent: 8000, defaultDues: 0, lastReading: 450, isExempt: false },
+                        { id: 'room_102', name: '102', tenant: 'Priya Verma', rent: 9000, defaultDues: 0, lastReading: 780, isExempt: false }
                     ],
                     history: {}
                 }
@@ -576,7 +576,7 @@
                 statusBadge.innerText = "Saved";
                 exportPdfBtn.classList.remove('hidden');
                 deleteBtn.classList.remove('hidden');
-                saveBtnText.innerText = "Update Calculations";
+                if (saveBtnText) saveBtnText.innerText = "Update Calculations";
 
                 document.getElementById('inputCommonPrev').value = record.commonPrev;
                 document.getElementById('inputCommonCurr').value = record.commonCurr;
@@ -586,7 +586,7 @@
                 statusBadge.innerText = "Draft";
                 exportPdfBtn.classList.add('hidden');
                 deleteBtn.classList.add('hidden');
-                saveBtnText.innerText = "Save Calculations";
+                if (saveBtnText) saveBtnText.innerText = "Save Calculations";
 
                 document.getElementById('inputCommonPrev').value = lastRecord ? lastRecord.commonCurr : (prop.commonBaseReading || 0);
                 document.getElementById('inputCommonCurr').value = '';
@@ -613,6 +613,10 @@
                 const currReadingVal = savedRoomData ? savedRoomData.currReading : '';
                 const duesVal = savedRoomData ? savedRoomData.dues : room.defaultDues;
                 const extraVal = savedRoomData ? savedRoomData.extra : '';
+                const advanceVal = savedRoomData ? (savedRoomData.advance || '') : '';
+                
+                // Inherit isExempt from saved history, fallback to admin setting, fallback to false
+                const isExempt = savedRoomData ? (savedRoomData.isExempt || false) : (room.isExempt || false);
 
                 return `
                     <div class="bg-[#1c1c1e] p-5 rounded-[24px]" data-room-id="${room.id}">
@@ -635,15 +639,24 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-3 gap-3">
                             <div>
-                                <label class="block text-[13px] text-[#ff453a] mb-1.5 font-medium">Prev Dues (₹)</label>
+                                <label class="block text-[13px] text-[#ff453a] mb-1.5 font-medium">Prev Dues</label>
                                 <input type="number" id="dues_${room.id}" value="${duesVal}" class="w-full p-3 rounded-xl bg-[#2c2c2e] text-white text-[15px] outline-none focus:ring-2 focus:ring-[#0a84ff]">
                             </div>
                             <div>
-                                <label class="block text-[13px] text-[#8e8e93] mb-1.5 font-medium">Extra Chg (₹)</label>
+                                <label class="block text-[13px] text-[#8e8e93] mb-1.5 font-medium">Extra</label>
                                 <input type="number" id="extra_${room.id}" value="${extraVal}" placeholder="0" class="w-full p-3 rounded-xl bg-[#2c2c2e] text-white text-[15px] outline-none focus:ring-2 focus:ring-[#0a84ff]">
                             </div>
+                            <div>
+                                <label class="block text-[13px] text-[#32d74b] mb-1.5 font-medium">Advance</label>
+                                <input type="number" id="advance_${room.id}" value="${advanceVal}" placeholder="0" class="w-full p-3 rounded-xl bg-[#2c2c2e] text-white text-[15px] outline-none focus:ring-2 focus:ring-[#32d74b]">
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-2 pt-4 mt-3 border-t border-[#38383a]">
+                            <input type="checkbox" id="exempt_${room.id}" ${isExempt ? 'checked' : ''} class="accent-[#0a84ff] w-4 h-4 cursor-pointer">
+                            <label for="exempt_${room.id}" class="text-[13px] text-[#8e8e93] font-medium cursor-pointer select-none">Exempt tenant from common utilities</label>
                         </div>
                     </div>
                 `;
@@ -654,9 +667,8 @@
             const prop = db.properties.find(p => p.id === selectedPropId);
             if (!prop || prop.rooms.length === 0) return;
 
-            const saveBtn = document.getElementById('saveBtn');
-            const originalText = saveBtn.innerHTML;
-            saveBtn.innerHTML = `Saving...`;
+            const saveBtnText = document.getElementById('saveBtnText');
+            if (saveBtnText) saveBtnText.innerText = `Saving...`;
 
             const unitRate = prop.unitRate;
             const commonPrev = parseFloat(document.getElementById('inputCommonPrev').value) || 0;
@@ -666,8 +678,18 @@
 
             const commonUnits = (commonCurr > commonPrev) ? (commonCurr - commonPrev) : 0;
             const commonElecCost = commonUnits * unitRate;
-            const commonElecPerUnit = commonElecCost / totalUnits;
-            const commonExpPerUnit = commonExpense / totalUnits;
+            
+            // Determine how many tenants are NOT exempt
+            let participatingUnits = 0;
+            prop.rooms.forEach(room => {
+                const isExempt = document.getElementById(`exempt_${room.id}`).checked;
+                if (!isExempt) participatingUnits++;
+            });
+
+            // Prevent division by zero
+            const effectiveUnits = participatingUnits > 0 ? participatingUnits : 1;
+            const commonElecPerUnit = commonElecCost / effectiveUnits;
+            const commonExpPerUnit = commonExpense / effectiveUnits;
 
             let grandTotal = 0;
             const computedRoomsData = [];
@@ -677,10 +699,18 @@
                 const curr = parseFloat(document.getElementById(`curr_${room.id}`).value) || 0;
                 const dues = parseFloat(document.getElementById(`dues_${room.id}`).value) || 0;
                 const extra = parseFloat(document.getElementById(`extra_${room.id}`).value) || 0;
+                const advance = parseFloat(document.getElementById(`advance_${room.id}`).value) || 0;
+                const isExempt = document.getElementById(`exempt_${room.id}`).checked;
 
                 const consumedUnits = (curr > prev) ? (curr - prev) : 0;
                 const elecBill = consumedUnits * unitRate;
-                const totalBill = Math.round(room.rent + elecBill + commonElecPerUnit + commonExpPerUnit + extra + dues);
+                
+                // Exempt tenants pay 0 towards common areas
+                const roomCommonElec = isExempt ? 0 : commonElecPerUnit;
+                const roomCommonExp = isExempt ? 0 : commonExpPerUnit;
+
+                // Advance amount is subtracted from total bill
+                const totalBill = Math.round(room.rent + elecBill + roomCommonElec + roomCommonExp + extra + dues - advance);
 
                 grandTotal += totalBill;
 
@@ -693,10 +723,12 @@
                     currReading: curr,
                     consumedUnits: consumedUnits,
                     elecBill: elecBill,
-                    commonElecShare: commonElecPerUnit,
-                    commonExpShare: commonExpPerUnit,
+                    commonElecShare: roomCommonElec,
+                    commonExpShare: roomCommonExp,
                     dues: dues,
                     extra: extra,
+                    advance: advance,
+                    isExempt: isExempt,
                     totalBill: totalBill
                 });
             });
@@ -713,13 +745,15 @@
                 roomsData: computedRoomsData,
                 summary: {
                     grandTotal: grandTotal,
-                    totalRooms: totalUnits
+                    totalRooms: totalUnits,
+                    participatingRooms: participatingUnits,
+                    perUnitCommonElec: commonElecPerUnit,
+                    perUnitCommonExp: commonExpPerUnit
                 }
             };
 
             saveStore(true);
             renderMonthBillingView();
-            saveBtn.innerHTML = originalText;
         }
 
         function deleteCurrentMonthRecord() {
@@ -774,7 +808,7 @@
                                 <td style="color: #666666; padding-top: 8px;">Other Expenses:</td>
                                 <td style="font-weight: 600; padding-top: 8px;">₹${record.commonExpense.toFixed(2)}</td>
                                 <td style="color: #666666; padding-top: 8px;">Per-Unit Share:</td>
-                                <td style="font-weight: 600; padding-top: 8px;">₹${((record.commonElecCost + record.commonExpense) / record.summary.totalRooms).toFixed(2)}</td>
+                                <td style="font-weight: 600; padding-top: 8px;">₹${((record.summary.perUnitCommonElec || 0) + (record.summary.perUnitCommonExp || 0)).toFixed(2)} <span style="font-size: 9px; font-weight: normal; color: #999999; margin-left: 4px;">(${record.summary.participatingRooms || record.summary.totalRooms} units)</span></td>
                             </tr>
                         </table>
                     </div>
@@ -782,16 +816,17 @@
                     <table style="width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 11px; text-align: left; margin-bottom: 24px;">
                         <thead>
                             <tr style="border-bottom: 2px solid #000000; color: #000000;">
-                                <th style="padding: 10px 4px; width: 8%;">Unit</th>
-                                <th style="padding: 10px 4px; width: 17%;">Tenant</th>
-                                <th style="padding: 10px 4px; text-align: right; width: 11%;">Base Rent</th>
-                                <th style="padding: 10px 4px; text-align: right; width: 9%;">Curr Rd</th>
-                                <th style="padding: 10px 4px; text-align: right; width: 9%;">Prev Rd</th>
-                                <th style="padding: 10px 4px; text-align: right; width: 8%;">Units</th>
-                                <th style="padding: 10px 4px; text-align: right; width: 11%;">Power</th>
+                                <th style="padding: 10px 4px; width: 7%;">Unit</th>
+                                <th style="padding: 10px 4px; width: 14%;">Tenant</th>
+                                <th style="padding: 10px 4px; text-align: right; width: 10%;">Base Rent</th>
+                                <th style="padding: 10px 4px; text-align: right; width: 8%;">Curr Rd</th>
+                                <th style="padding: 10px 4px; text-align: right; width: 8%;">Prev Rd</th>
+                                <th style="padding: 10px 4px; text-align: right; width: 7%;">Units</th>
+                                <th style="padding: 10px 4px; text-align: right; width: 10%;">Power</th>
                                 <th style="padding: 10px 4px; text-align: right; width: 10%;">Common</th>
                                 <th style="padding: 10px 4px; text-align: right; width: 8%;">Dues</th>
-                                <th style="padding: 10px 4px; text-align: right; width: 9%; font-weight: 700;">Total (₹)</th>
+                                <th style="padding: 10px 4px; text-align: right; width: 8%;">Adv.</th>
+                                <th style="padding: 10px 4px; text-align: right; width: 10%; font-weight: 700;">Total (₹)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -806,19 +841,19 @@
                                     <td style="padding: 12px 4px; text-align: right; background-color: #fefce8;">₹${r.elecBill.toFixed(2)}</td>
                                     <td style="padding: 12px 4px; text-align: right; background-color: #f0f9ff;">₹${(r.commonElecShare + r.commonExpShare).toFixed(2)}</td>
                                     <td style="padding: 12px 4px; text-align: right; color: ${(r.extra + r.dues) > 0 ? '#ff3b30' : '#000000'};">₹${(r.extra + r.dues).toFixed(2)}</td>
+                                    <td style="padding: 12px 4px; text-align: right; color: ${(r.advance) > 0 ? '#34c759' : '#666666'};">₹${r.advance || 0}</td>
                                     <td style="padding: 12px 4px; text-align: right; font-weight: 700; font-size: 12px; background-color: #fef2f2; color: #b91c1c;">₹${r.totalBill}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="9" style="padding: 16px 6px; text-align: right; font-size: 14px; font-weight: 600;">Total Collection:</td>
+                                <td colspan="10" style="padding: 16px 6px; text-align: right; font-size: 14px; font-weight: 600;">Total Collection:</td>
                                 <td style="padding: 16px 6px; text-align: right; font-size: 16px; font-weight: 700;">₹${record.summary.grandTotal}</td>
                             </tr>
                         </tfoot>
                     </table>
 
-                    <!-- NEW TENANT SUMMARY TABLE -->
                     <div style="margin-top: 32px; page-break-inside: avoid; width: 60%;">
                         <div style="font-size: 13px; text-transform: uppercase; font-weight: 600; color: #666666; margin-bottom: 8px; border-bottom: 1px solid #d2d2d7; padding-bottom: 6px;">Tenant Summary</div>
                         <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
@@ -894,6 +929,8 @@
 
             if (field === 'rent' || field === 'lastReading') {
                 room[field] = parseFloat(value) || 0;
+            } else if (field === 'isExempt') {
+                room[field] = value;
             } else {
                 room[field] = value.trim();
             }
@@ -964,6 +1001,10 @@
                                         <button onclick="deleteRoom('${p.id}', '${r.id}')" class="text-[#ff453a] bg-[#ff453a]/10 p-2.5 rounded-lg text-[14px] w-full"><i class="fa-solid fa-trash-can"></i></button>
                                     </div>
                                 </div>
+                                <div class="flex items-center gap-2 pt-2 border-t border-[#38383a]/50 mt-2">
+                                    <input type="checkbox" id="admin_exempt_${r.id}" ${r.isExempt ? 'checked' : ''} onchange="updateRoomField('${p.id}', '${r.id}', 'isExempt', this.checked)" class="accent-[#0a84ff] w-3.5 h-3.5 cursor-pointer">
+                                    <label for="admin_exempt_${r.id}" class="text-[12px] text-[#8e8e93] cursor-pointer select-none">Exempt from common amount</label>
+                                </div>
                             </div>
                         `).join('')}
                     </div>
@@ -1021,7 +1062,8 @@
                 tenant: tenant.trim(),
                 rent: rent,
                 defaultDues: 0,
-                lastReading: lastReading
+                lastReading: lastReading,
+                isExempt: false
             });
 
             saveStore(true);
