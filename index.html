@@ -667,9 +667,6 @@
             const prop = db.properties.find(p => p.id === selectedPropId);
             if (!prop || prop.rooms.length === 0) return;
 
-            const saveBtnText = document.getElementById('saveBtnText');
-            if (saveBtnText) saveBtnText.innerText = `Saving...`;
-
             const unitRate = prop.unitRate;
             const commonPrev = parseFloat(document.getElementById('inputCommonPrev').value) || 0;
             const commonCurr = parseFloat(document.getElementById('inputCommonCurr').value) || 0;
@@ -754,6 +751,23 @@
 
             saveStore(true);
             renderMonthBillingView();
+
+            // *** NEW VISUAL FEEDBACK ANIMATION ***
+            const newSaveBtn = document.getElementById('saveBtn');
+            if (newSaveBtn) {
+                const originalClass = newSaveBtn.className;
+                
+                newSaveBtn.className = "w-full bg-[#32d74b] text-black font-semibold py-4 rounded-xl transition-all text-[17px]";
+                newSaveBtn.innerHTML = `<i class="fa-solid fa-check"></i> Saved Successfully!`;
+                
+                setTimeout(() => {
+                    const currentBtn = document.getElementById('saveBtn');
+                    if (currentBtn) {
+                        currentBtn.className = originalClass;
+                        currentBtn.innerHTML = `<span id="saveBtnText">Update Calculations</span>`;
+                    }
+                }, 1500);
+            }
         }
 
         function deleteCurrentMonthRecord() {
