@@ -225,16 +225,17 @@
         let isCloudMode = false;
         let cloudSyncTimeout = null;
 
+        // FIXED CODE: Filled in missing numbers in the properties/rooms objects
         let db = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || {
             properties: [
                 {
                     id: 'Property',
                     name: 'Name',
                     unitRate: 0,
-                    commonBaseReading: 0000,
+                    commonBaseReading: 0,
                     rooms: [
-                        { id: '', name: '', tenant: '', rent: , defaultDues: , lastReading: , isExempt: false },
-                        { id: '', name: '', tenant: '', rent: , defaultDues: , lastReading: , isExempt: false }
+                        { id: '', name: '', tenant: '', rent: 0, defaultDues: 0, lastReading: 0, isExempt: false },
+                        { id: '', name: '', tenant: '', rent: 0, defaultDues: 0, lastReading: 0, isExempt: false }
                     ],
                     history: {}
                 }
