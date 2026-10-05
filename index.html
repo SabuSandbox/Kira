@@ -160,9 +160,16 @@
                     <button onclick="saveMonthlyCalculations()" id="saveBtn" class="w-full bg-[#0a84ff] text-white font-semibold py-4 rounded-xl transition-all active:scale-[0.98] text-[17px]">
                         <span id="saveBtnText">Save Calculations</span>
                     </button>
-                    <button id="exportPdfBtn" onclick="exportMonthlyStatementPDF()" class="hidden w-full bg-[#32d74b] text-black font-semibold py-4 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-[17px]">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Export PDF Statement
-                    </button>
+                    
+                    <div id="pdfActionsGroup" class="hidden flex gap-3">
+                        <button id="exportPdfBtn" onclick="exportMonthlyStatementPDF('download')" class="flex-1 bg-[#2c2c2e] text-white font-semibold py-3.5 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-[15px]">
+                            <i class="fa-solid fa-download"></i> Save PDF
+                        </button>
+                        <button id="sharePdfBtn" onclick="exportMonthlyStatementPDF('share')" class="flex-1 bg-[#32d74b] text-black font-semibold py-3.5 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-[15px]">
+                            <i class="fa-solid fa-share-nodes"></i> Share
+                        </button>
+                    </div>
+
                     <button id="deleteMonthRecordBtn" onclick="deleteCurrentMonthRecord()" class="hidden w-full bg-[#ff453a]/10 text-[#ff453a] font-semibold py-4 rounded-xl transition-all active:scale-[0.98] text-[17px]">
                         Delete Record
                     </button>
@@ -567,14 +574,14 @@
             }
 
             const statusBadge = document.getElementById('billingStatusBadge');
-            const exportPdfBtn = document.getElementById('exportPdfBtn');
+            const pdfActionsGroup = document.getElementById('pdfActionsGroup');
             const deleteBtn = document.getElementById('deleteMonthRecordBtn');
             const saveBtnText = document.getElementById('saveBtnText');
 
             if (record) {
                 statusBadge.className = "text-[13px] px-3 py-1 rounded-full font-semibold bg-[#32d74b]/10 text-[#32d74b]";
                 statusBadge.innerText = "Saved";
-                exportPdfBtn.classList.remove('hidden');
+                pdfActionsGroup.classList.remove('hidden');
                 deleteBtn.classList.remove('hidden');
                 if (saveBtnText) saveBtnText.innerText = "Update Calculations";
 
@@ -584,7 +591,7 @@
             } else {
                 statusBadge.className = "text-[13px] px-3 py-1 rounded-full font-semibold bg-[#ffcc00]/10 text-[#ffcc00]";
                 statusBadge.innerText = "Draft";
-                exportPdfBtn.classList.add('hidden');
+                pdfActionsGroup.classList.add('hidden');
                 deleteBtn.classList.add('hidden');
                 if (saveBtnText) saveBtnText.innerText = "Save Calculations";
 
@@ -666,6 +673,9 @@
         function saveMonthlyCalculations() {
             const prop = db.properties.find(p => p.id === selectedPropId);
             if (!prop || prop.rooms.length === 0) return;
+
+            const saveBtnText = document.getElementById('saveBtnText');
+            if (saveBtnText) saveBtnText.innerText = `Saving...`;
 
             const unitRate = prop.unitRate;
             const commonPrev = parseFloat(document.getElementById('inputCommonPrev').value) || 0;
@@ -752,11 +762,10 @@
             saveStore(true);
             renderMonthBillingView();
 
-            // *** NEW VISUAL FEEDBACK ANIMATION ***
+            // Visual feedback animation
             const newSaveBtn = document.getElementById('saveBtn');
             if (newSaveBtn) {
                 const originalClass = newSaveBtn.className;
-                
                 newSaveBtn.className = "w-full bg-[#32d74b] text-black font-semibold py-4 rounded-xl transition-all text-[17px]";
                 newSaveBtn.innerHTML = `<i class="fa-solid fa-check"></i> Saved Successfully!`;
                 
@@ -780,7 +789,7 @@
             }
         }
 
-        async function exportMonthlyStatementPDF() {
+        async function exportMonthlyStatementPDF(action = 'download') {
             const prop = db.properties.find(p => p.id === selectedPropId);
             const record = prop?.history?.[selectedMonthKey];
 
@@ -789,9 +798,10 @@
                 return;
             }
 
-            const exportBtn = document.getElementById('exportPdfBtn');
+            const btnId = action === 'share' ? 'sharePdfBtn' : 'exportPdfBtn';
+            const exportBtn = document.getElementById(btnId);
             const originalBtnHTML = exportBtn.innerHTML;
-            exportBtn.innerHTML = `Generating PDF...`;
+            exportBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Wait...`;
             exportBtn.disabled = true;
 
             const printContainer = document.getElementById('pdfPrintableTemplate');
@@ -898,9 +908,10 @@
 
             await new Promise(resolve => setTimeout(resolve, 150));
 
+            const filename = `${prop.name.replace(/\s+/g, '_')}_Statement_${record.monthKey}.pdf`;
             const opt = {
                 margin: [0.25, 0.25, 0.25, 0.25],
-                filename: `${prop.name.replace(/\s+/g, '_')}_Statement_${record.monthKey}.pdf`,
+                filename: filename,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { 
                     scale: 2, 
@@ -914,10 +925,31 @@
             };
 
             try {
-                await html2pdf().set(opt).from(printContainer).save();
+                if (action === 'share') {
+                    // Generate Blob for sharing
+                    const pdfBlob = await html2pdf().set(opt).from(printContainer).output('blob');
+                    const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+                    
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            title: 'Rent Statement',
+                            text: 'Here is the rent statement for ' + formatMonthKey(record.monthKey),
+                            files: [file]
+                        });
+                    } else {
+                        alert("Sharing is not fully supported on this device. The PDF will be downloaded instead.");
+                        await html2pdf().set(opt).from(printContainer).save();
+                    }
+                } else {
+                    // Standard Download
+                    await html2pdf().set(opt).from(printContainer).save();
+                }
             } catch (err) {
-                console.error("PDF generation failed:", err);
-                alert("Failed to create PDF.");
+                // Ignore DOMException errors (like user canceling the share menu)
+                if (err.name !== 'AbortError') {
+                    console.error("PDF action failed:", err);
+                    alert("Action failed. Please try again.");
+                }
             } finally {
                 exportBtn.innerHTML = originalBtnHTML;
                 exportBtn.disabled = false;
