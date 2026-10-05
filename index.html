@@ -225,7 +225,9 @@
         let isCloudMode = false;
         let cloudSyncTimeout = null;
 
-        // FIXED CODE: Filled in missing numbers in the properties/rooms objects
+        let pendingShareFile = null;
+        let pendingShareTimeout = null;
+
         let db = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || {
             properties: [
                 {
@@ -801,6 +803,35 @@
 
             const btnId = action === 'share' ? 'sharePdfBtn' : 'exportPdfBtn';
             const exportBtn = document.getElementById(btnId);
+            
+            // -------------------------------------------------------------
+            // STEP 2: INSTANT SHARE (Fixes the iOS Safari Timeout Error)
+            // -------------------------------------------------------------
+            if (action === 'share' && pendingShareFile) {
+                try {
+                    if (navigator.canShare && navigator.canShare({ files: [pendingShareFile] })) {
+                        await navigator.share({
+                            title: `${prop.name} Statement`,
+                            files: [pendingShareFile]
+                        });
+                    }
+                } catch (err) {
+                    // Ignore AbortError (happens if user closes share sheet)
+                    if (err.name !== 'AbortError') console.error("Share failed", err);
+                }
+                
+                // Reset the button back to normal after sharing
+                clearTimeout(pendingShareTimeout);
+                pendingShareFile = null;
+                exportBtn.innerHTML = `<i class="fa-solid fa-share-nodes"></i> Share`;
+                exportBtn.classList.replace('bg-[#ffcc00]', 'bg-[#32d74b]');
+                exportBtn.classList.replace('text-black', 'text-black');
+                return;
+            }
+
+            // -------------------------------------------------------------
+            // STEP 1: GENERATE PDF 
+            // -------------------------------------------------------------
             const originalBtnHTML = exportBtn.innerHTML;
             exportBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Wait...`;
             exportBtn.disabled = true;
@@ -899,7 +930,6 @@
                             </tbody>
                         </table>
                     </div>
-
                     <div style="font-size: 10px; color: #999999; text-align: center; border-top: 1px solid #e5e5ea; padding-top: 12px; margin-top: 40px;">
                     </div>
                 </div>
@@ -912,47 +942,62 @@
                 margin: [0.25, 0.25, 0.25, 0.25],
                 filename: filename,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2, 
-                    useCORS: true,
-                    scrollX: 0,
-                    scrollY: 0,
-                    windowWidth: 750,
-                    backgroundColor: '#ffffff'
-                },
+                html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: 750, backgroundColor: '#ffffff' },
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
 
             try {
+                const pdfBlob = await html2pdf().set(opt).from(printContainer).output('blob');
+                const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+                
                 if (action === 'share') {
-                    // Generate Blob for sharing
-                    const pdfBlob = await html2pdf().set(opt).from(printContainer).output('blob');
-                    const file = new File([pdfBlob], filename, { type: 'application/pdf' });
-                    
                     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        await navigator.share({
-                            title: 'This month rent & electricity bill',
-                            text: 'for the month of ' + formatMonthKey(record.monthKey),
-                            files: [file]
-                        });
+                        // Store file globally so the next tap is instant
+                        pendingShareFile = file;
+                        
+                        // Change button to prompt the second tap
+                        exportBtn.innerHTML = `<i class="fa-solid fa-arrow-up-from-bracket"></i> Tap to Share`;
+                        exportBtn.classList.replace('bg-[#32d74b]', 'bg-[#ffcc00]'); // Turn button yellow
+                        exportBtn.disabled = false;
+                        
+                        // Reset if the user doesn't tap within 15 seconds
+                        pendingShareTimeout = setTimeout(() => {
+                            pendingShareFile = null;
+                            exportBtn.innerHTML = originalBtnHTML;
+                            exportBtn.classList.replace('bg-[#ffcc00]', 'bg-[#32d74b]');
+                        }, 15000);
+                        
                     } else {
-                        alert("Sharing is not fully supported on this device. The PDF will be downloaded instead.");
-                        await html2pdf().set(opt).from(printContainer).save();
+                        alert("File sharing is not supported on this browser. Downloading instead.");
+                        downloadBlob(pdfBlob, filename);
+                        exportBtn.innerHTML = originalBtnHTML;
+                        exportBtn.disabled = false;
                     }
                 } else {
                     // Standard Download
-                    await html2pdf().set(opt).from(printContainer).save();
+                    downloadBlob(pdfBlob, filename);
+                    exportBtn.innerHTML = originalBtnHTML;
+                    exportBtn.disabled = false;
                 }
             } catch (err) {
-                // Ignore DOMException errors (like user canceling the share menu)
-                if (err.name !== 'AbortError') {
-                    console.error("PDF action failed:", err);
-                    alert("Action failed. Please try again.");
-                }
-            } finally {
+                console.error("PDF action failed:", err);
+                alert("Action failed. Please try again.");
                 exportBtn.innerHTML = originalBtnHTML;
                 exportBtn.disabled = false;
             }
+        }
+
+        // Helper function to trigger a direct download using a generated Blob
+        function downloadBlob(blob, filename) {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
         }
 
         function updatePropField(propId, field, value) {
